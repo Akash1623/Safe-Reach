@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="SafeReach — Safe arrival confirmed for your journey.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeReach | Safe Arrival</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile.css">
+
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+    :root {
+      --bg: #05071c;
+      --border: #293875;
+      --purple: #8e2cff;
+      --pink: #ff5b91;
+      --green: #25d865;
+      --text: #f8f8ff;
+      --muted: #aeb8dc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Manrope", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 50% 5%, #2b2a75 0%, transparent 34%),
+        var(--bg);
+    }
+
+    .page {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 45px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 35px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 43px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      background: linear-gradient(145deg, #b348ff, #5522d6);
+      clip-path: polygon(50% 0%, 95% 18%, 84% 76%, 50% 100%, 16% 76%, 5% 18%);
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 20px;
+    }
+
+    .brand small {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .back-button {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 14px;
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      background: #111843;
+    }
+
+    .success-card {
+      position: relative;
+      overflow: hidden;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 45px 45px 38px;
+      border: 1px solid #2d4c74;
+      border-radius: 22px;
+      text-align: center;
+      background:
+        radial-gradient(circle at 50% 45%, #1b7748 0%, #10284a 35%, #0b1031 72%);
+      box-shadow: 0 20px 55px rgba(0, 0, 0, 0.35);
+    }
+
+    .glow {
+      position: absolute;
+      width: 420px;
+      height: 420px;
+      top: 80px;
+      left: 50%;
+      border-radius: 50%;
+      opacity: 0.55;
+      transform: translateX(-50%);
+      background: radial-gradient(circle, #48df7c 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .success-icon {
+      position: relative;
+      z-index: 1;
+      width: 92px;
+      height: 92px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 18px;
+      border: 7px solid #6dff91;
+      border-radius: 50%;
+      color: #6dff91;
+      font-size: 48px;
+      font-weight: 800;
+      box-shadow: 0 0 28px #39df6f;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: #8aff69;
+      font-size: 34px;
+    }
+
+    .subtitle {
+      position: relative;
+      z-index: 1;
+      margin: 10px auto 25px;
+      max-width: 520px;
+      color: #d6f5df;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .avatar {
+      position: relative;
+      z-index: 1;
+      width: 150px;
+      height: 180px;
+      margin: 0 auto 18px;
+    }
+
+    .hair {
+      position: absolute;
+      top: 8px;
+      left: 22px;
+      width: 105px;
+      height: 110px;
+      border-radius: 50% 50% 42% 42%;
+      background: #24162c;
+    }
+
+    .face {
+      position: absolute;
+      top: 29px;
+      left: 39px;
+      width: 72px;
+      height: 80px;
+      border-radius: 48%;
+      background: #f1a47c;
+      z-index: 2;
+    }
+
+    .face::after {
+      content: "⌣";
+      position: absolute;
+      top: 21px;
+      left: 21px;
+      color: #3a2030;
+      font-size: 39px;
+    }
+
+    .body {
+      position: absolute;
+      bottom: 0;
+      left: 17px;
+      width: 116px;
+      height: 88px;
+      border-radius: 52px 52px 8px 8px;
+      background: linear-gradient(145deg, #f45d8b, #bc2e63);
+    }
+
+    .thumb {
+      position: absolute;
+      right: -5px;
+      top: 79px;
+      z-index: 4;
+      color: #f1a47c;
+      font-size: 53px;
+      transform: rotate(-18deg);
+    }
+
+    .summary {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .summary-box {
+      padding: 15px 10px;
+      border: 1px solid #376d56;
+      border-radius: 12px;
+      background: rgba(6, 27, 30, 0.62);
+    }
+
+    .summary-box small,
+    .summary-box strong {
+      display: block;
+    }
+
+    .summary-box small {
+      color: #b7ddc3;
+      font-size: 10px;
+    }
+
+    .summary-box strong {
+      margin-top: 6px;
+      color: white;
+      font-size: 15px;
+    }
+
+    .contact-status {
+      position: relative;
+      z-index: 1;
+      margin-top: 18px;
+      padding: 13px;
+      border: 1px solid #2f8050;
+      border-radius: 11px;
+      color: #baffcb;
+      font-size: 11px;
+      background: rgba(13, 72, 39, 0.7);
+    }
+
+    .buttons {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .button {
+      border: 0;
+      border-radius: 10px;
+      padding: 13px 18px;
+      color: white;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .primary {
+      background: linear-gradient(90deg, var(--purple), var(--pink));
+    }
+
+    .secondary {
+      border: 1px solid #4b5c91;
+      background: #111843;
+    }
+
+    @media (max-width: 650px) {
+      .success-card {
+        padding: 34px 18px 28px;
+      }
+
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      .buttons {
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <header class="topbar">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">S</div>
+        <div>
+          <strong>SafeReach</strong>
+          <small>Your Safety, Our Priority</small>
+        </div>
+      </a>
+
+      <a href="index.html" class="back-button">← Back to Dashboard</a>
+    </header>
+
+    <main class="success-card">
+      <div class="glow"></div>
+
+      <div class="success-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6dff91" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+
+      <h1>You Reached Safely!</h1>
+
+      <p class="subtitle">
+        Your safe arrival has been confirmed. Your trusted contact has been notified.
+      </p>
+
+      <div class="avatar">
+        <div class="hair"></div>
+        <div class="face"></div>
+        <div class="body"></div>
+        <div class="thumb">▲</div>
+      </div>
+
+      <section class="summary">
+        <div class="summary-box">
+          <small>From</small>
+<strong id="arrivalFrom">SR-CAS</strong>
+        </div>
+
+        <div class="summary-box">
+          <small>Distance Travelled</small>
+<strong id="arrivalDistance">6.2 km</strong>        
+</div>
+
+        <div class="summary-box">
+          <small>Journey Time</small>
+<strong id="arrivalTime">24 mins</strong>       
+ </div>
+      </section>
+
+      <div class="contact-status" id="contactStatus">
+        <div id="notificationText">
+          Notifying your trusted contacts...
+        </div>
+      </div>
+
+      <div class="buttons">
+        <a class="button primary" href="index.html">Back to Dashboard</a>
+        <a class="button secondary" href="start-journey.html">Start Another Journey</a>
+      </div>
+    </main>
+  </div>
+  <script>
+    // Auth Guard
+    if (!localStorage.getItem('safeReachName')) window.location.href = 'welcome.html';
+
+    const savedFrom = localStorage.getItem("safeReachJourneyFrom");
+const savedDistance = localStorage.getItem("safeReachJourneyDistance");
+const savedTime = localStorage.getItem("safeReachJourneyTime");
+
+const contact = JSON.parse(localStorage.getItem("safeReachCallContact"));
+
+if (savedFrom) {
+    document.getElementById("arrivalFrom").textContent = savedFrom;
+}
+
+if (savedDistance) {
+    document.getElementById("arrivalDistance").textContent = savedDistance;
+}
+
+if (savedTime) {
+    document.getElementById("arrivalTime").textContent = savedTime;
+}
+
+
+const notificationText = document.getElementById("notificationText");
+
+const selectedContacts = JSON.parse(
+  
+    localStorage.getItem("safeReachSelectedContacts")
+) || [];
+// =========================
+// Save Journey History
+// =========================
+
+const journeyHistory =
+JSON.parse(localStorage.getItem("safeReachJourneyHistory")) || [];
+
+const currentContact =
+JSON.parse(localStorage.getItem("safeReachCurrentContact"));
+
+const journeyRecord = {
+
+    from: localStorage.getItem("safeReachJourneyFrom"),
+
+    to: localStorage.getItem("safeReachJourneyTo"),
+
+    distance: localStorage.getItem("safeReachJourneyDistance"),
+
+    duration: localStorage.getItem("safeReachJourneyTime"),
+
+    arrival: localStorage.getItem("safeReachArrival"),
+
+    contact: currentContact ?
+        currentContact.name :
+        "Unknown",
+
+    status: "Completed",
+
+    date:
+    new Date().toLocaleDateString(),
+
+    completedTime:
+    new Date().toLocaleTimeString()
+
+};
+
+// Prevent duplicate save
+
+const alreadySaved =
+journeyHistory.some(journey =>
+journey.date === journeyRecord.date &&
+journey.completedTime === journeyRecord.completedTime &&
+journey.status === journeyRecord.status
+);
+
+if(!alreadySaved){
+
+    journeyHistory.unshift(journeyRecord);
+
+    localStorage.setItem(
+        "safeReachJourneyHistory",
+        JSON.stringify(journeyHistory)
+    );
+
+}
+
+if (selectedContacts.length > 0) {
+    const names = selectedContacts.map(c => c.name).join(", ");
+    const verb = selectedContacts.length > 1 ? "have" : "has";
+    notificationText.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> ${names} ${verb} been notified that you reached safely.`;
+} else {
+    notificationText.textContent = 'Your journey has been recorded. Add trusted contacts to receive notifications.';
+}
+
+// Clean up journey state
+localStorage.removeItem('safeReachJourneyFrom');
+localStorage.removeItem('safeReachJourneyTo');
+localStorage.removeItem('safeReachJourneyActive');
+localStorage.removeItem('safeReachDestination');
+localStorage.removeItem('safeReachSecondsLeft');
+localStorage.removeItem('safeReachJourneyDistance');
+localStorage.removeItem('safeReachJourneyTime');
+localStorage.removeItem('safeReachArrival');
+</script>
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a href="index.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="start-journey.html" class="mob-nav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      Journey
+    </a>
+    <a href="safety-map.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Map
+    </a>
+    <a href="sos.html" class="mob-nav-item mob-nav-sos">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      SOS
+    </a>
+    <a href="settings.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+</body>
+</html>

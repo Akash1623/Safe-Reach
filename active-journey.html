@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeReach | Active Journey</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+    :root {
+      --bg: #05071c;
+      --border: #293875;
+      --purple: #8e2cff;
+      --pink: #ff5b91;
+      --green: #20ca61;
+      --red: #ef3157;
+      --blue: #2d85ff;
+      --text: #f8f8ff;
+      --muted: #aeb8dc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Manrope", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 50% 0%, #29266f 0%, transparent 34%),
+        var(--bg);
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 43px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      background: linear-gradient(145deg, #b348ff, #5522d6);
+      clip-path: polygon(50% 0%, 95% 18%, 84% 76%, 50% 100%, 16% 76%, 5% 18%);
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 20px;
+    }
+
+    .brand small {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .back-button {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 14px;
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      background: #111843;
+    }
+
+    .heading {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .heading h1 {
+      margin: 0;
+      font-size: 32px;
+    }
+
+    .heading p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(145deg, #111846, #080c29);
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.28);
+    }
+
+    .map-card {
+      min-height: 580px;
+      padding: 20px;
+    }
+   
+
+    .map-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .map-top h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .live-badge {
+      padding: 6px 10px;
+      border-radius: 20px;
+      color: #77ff9f;
+      background: #123f2a;
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .live-alert{
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:12px;
+    background:#0a1030;
+    border:1px solid #273670;
+    color:#ffffff;
+    font-size:13px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    transition:all .3s ease;
+}
+
+.live-alert.safe{
+    color:#20ca61;
+}
+
+.live-alert.warning{
+    color:#ffc857;
+}
+
+.live-alert.danger{
+    color:#ef3157;
+}
+
+    .map-area {
+    position: relative;
+    height: 390px;
+    overflow: hidden;
+    border-radius: 14px;
+}
+
+#map{
+    width:100%;
+    height:100%;
+}
+
+.map-avatar{
+    position:relative;
+    width:50px;
+    height:70px;
+}
+
+.map-avatar .avatar-head{
+    position:absolute;
+    top:6px;
+    left:50%;
+    transform:translateX(-50%);
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    background:#f0ab86;
+}
+
+.map-avatar .avatar-body{
+    position:absolute;
+    bottom:0;
+    left:50%;
+    transform:translateX(-50%);
+    width:34px;
+    height:42px;
+    border-radius:18px 18px 6px 6px;
+}
+
+.map-avatar.male .avatar-body{
+    background:#4d24af;
+}
+
+.map-avatar.female .avatar-body{
+    background:#e95183;
+}
+
+.map-avatar.male .avatar-head{
+    box-shadow:0 -8px 0 #18142c;
+}
+
+.map-avatar.female .avatar-head{
+    box-shadow:0 -8px 0 6px #28152d;
+}
+
+    
+
+    .pin-one {
+      left: 28%;
+      top: 20%;
+      background: #ffad37;
+      box-shadow: 0 0 15px #ffad37;
+    }
+
+    .pin-two {
+      right: 19%;
+      bottom: 20%;
+      background: #f1405e;
+      box-shadow: 0 0 15px #f1405e;
+    }
+
+    .location-card {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      width: 225px;
+      padding: 14px;
+      border-radius: 12px;
+      color: #1f2238;
+      background: #f3f2f7;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .location-card strong {
+      display: block;
+      font-size: 12px;
+    }
+
+    .location-card p {
+      margin: 6px 0 0;
+      color: #666276;
+      font-size: 10px;
+    }
+ .safety-alert{
+    margin-top:12px;
+    padding:12px;
+    border-radius:10px;
+    background:#111843;
+    border:1px solid #2b396e;
+    color:#fff;
+    font-size:13px;
+    font-weight:600;
+    transition:0.3s;
+}
+    .journey-info {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .info-box {
+      padding: 12px;
+      border: 1px solid #273670;
+      border-radius: 10px;
+      background: #0a1030;
+    }
+
+    .info-box small,
+    .info-box strong {
+      display: block;
+    }
+
+    .info-box small {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .info-box strong {
+      margin-top: 5px;
+      font-size: 13px;
+    }
+
+    .side-panel {
+      display: grid;
+      gap: 18px;
+    }
+
+    .status-card,
+    .contact-card,
+    .actions-card {
+      padding: 20px;
+    }
+
+    .status-card h2,
+    .contact-card h2,
+    .actions-card h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .status-card > p,
+    .contact-card > p,
+    .actions-card > p {
+      margin: 7px 0 16px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .progress-track {
+      position: relative;
+      height: 6px;
+      margin: 26px 10px 20px;
+      border-radius: 10px;
+      background: #2b396e;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #277fff, #8e2cff);
+    }
+
+    .progress-dot {
+      position: absolute;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      border: 3px solid #7582b6;
+      border-radius: 50%;
+      background: #0c1235;
+      transform: translate(-50%, -50%);
+    }
+
+    .progress-dot.done {
+      border-color: #2bd66b;
+      background: #2bd66b;
+    }
+
+    .progress-dot.current {
+      border-color: #3188ff;
+      background: #3188ff;
+      box-shadow: 0 0 15px #3188ff;
+    }
+
+    .dot-1 { left: 0; }
+    .dot-2 { left: 33%; }
+    .dot-3 { left: 66%; }
+    .dot-4 { left: 100%; }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .arrival-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #0a1030;
+    }
+
+    .arrival-box small,
+    .arrival-box strong {
+      display: block;
+    }
+
+    .arrival-box small {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .arrival-box strong {
+      margin-top: 5px;
+      font-size: 17px;
+    }
+
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 12px;
+      border: 1px solid #273670;
+      border-radius: 10px;
+      background: #0a1030;
+    }
+
+    .contact-avatar {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      font-size: 13px;
+      font-weight: 800;
+      background: linear-gradient(145deg, #ff7394, #7039e4);
+    }
+
+    .contact-row strong,
+    .contact-row small {
+      display: block;
+    }
+
+    .contact-row strong {
+      font-size: 12px;
+    }
+
+    .contact-row small {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .shared-badge {
+      margin-left: auto;
+      padding: 5px 8px;
+      border-radius: 8px;
+      color: #77ff9f;
+      background: #123f2a;
+      font-size: 8px;
+      font-weight: 800;
+    }
+
+    .safe-button,
+    .help-button {
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 13px;
+      color: white;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .safe-button {
+      margin-top: 4px;
+      background: linear-gradient(90deg, #14ac41, #27d865);
+    }
+
+    .help-button {
+      margin-top: 10px;
+      background: linear-gradient(90deg, #df1e4a, #f23c5f);
+    }
+
+    @media (max-width: 850px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .journey-info {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <link
+rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+</head>
+
+<body>
+  <div class="page">
+
+    <header class="topbar">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">S</div>
+        <div>
+          <strong>SafeReach</strong>
+          <small>Your Safety, Our Priority</small>
+        </div>
+      </a>
+
+      <a href="index.html" class="back-button">← Back to Dashboard</a>
+    </header>
+
+    <section class="heading">
+      <h1>Your Journey Is Active</h1>
+      <p>Live location sharing is active with your trusted contact.</p>
+    </section>
+
+    <section class="grid">
+      <article class="card map-card">
+        <div class="map-top">
+          <h2>Live Safety Map</h2>
+          <span class="live-badge">● LIVE</span>
+        </div>
+
+        <div class="map-area">
+    <div id="map"></div>
+
+    <div class="location-card">
+        <strong>Your Current Location</strong>
+        <p>Near Gandhipuram, Coimbatore</p>
+        <p id="locationUpdate">Updated just now</p>
+</div>
+</div>
+
+        <div class="journey-info">
+          <div class="info-box">
+            <small>From</small>
+<strong id="journeyFrom">Sri Ramakrishna College of Arts and Science</strong>          </div>
+
+          <div class="info-box">
+            <small>To</small>
+<strong id="journeyTo">Race Course, Coimbatore</strong>          </div>
+
+          <div class="info-box">
+            <small>Distance Remaining</small>
+            <strong id="distanceRemaining">2.8 km</strong>
+          </div>
+        </div>
+      </article>
+
+      <aside class="side-panel">
+        <article class="card status-card">
+          <h2>Journey Progress</h2>
+          <p>You are moving along the safer recommended route.</p>
+
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+
+           <span class="progress-dot done dot-1"></span>
+<span class="progress-dot dot-2"></span>
+<span class="progress-dot dot-3"></span>
+<span class="progress-dot dot-4"></span>
+          </div>
+
+          <div class="progress-labels">
+            <span>Started</span>
+            <span>Midway</span>
+            <span>Near</span>
+            <span>Arrived</span>
+          </div>
+          <div class="live-alert" id="liveAlert">
+    🟢 Route is safe.
+</div>
+
+          <div class="arrival-box">
+            <div>
+              <small>Expected Arrival</small>
+              <strong>07:30 PM</strong>
+            </div>
+
+            <div>
+              <small>Time Remaining</small>
+              <strong id="timerText">00:18:36</strong>
+            </div>
+          </div>
+        </article>
+
+      <article class="card contact-card">
+  <h2>Trusted Contact</h2>
+  <p>Your location is being shared securely.</p>
+
+  <div class="contact-row">
+    <div class="contact-avatar" id="contactAvatar">P</div>
+
+    <div>
+      <strong id="contactName">Loading...</strong>
+      <small id="contactRelation">Loading...</small>
+    </div>
+
+    <span class="shared-badge">Shared</span>
+  </div>
+</article>
+
+        <article class="card actions-card">
+          <h2>Safety Actions</h2>
+          <p id="actionDesc">Confirm your arrival once you reach your destination.</p>
+
+          <button class="safe-button" id="reachedButton">
+            I Reached Safely
+          </button>
+
+          <button class="help-button" id="helpButton">
+            I Need Help
+          </button>
+        </article>
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    // Auth Guard
+    if (!localStorage.getItem('safeReachName')) window.location.href = 'welcome.html';
+    if (!localStorage.getItem('safeReachJourneyFrom')) window.location.href = 'start-journey.html';
+
+    const reachedButton = document.getElementById('reachedButton');
+    const helpButton = document.getElementById('helpButton');
+    const timerText = document.getElementById('timerText');
+    const distanceRemaining = document.getElementById('distanceRemaining');
+    const locationUpdate = document.getElementById('locationUpdate');
+    const progressFill = document.getElementById('progressFill');
+    const liveAlert = document.getElementById('liveAlert');
+    const dot1 = document.querySelector('.dot-1');
+    const dot2 = document.querySelector('.dot-2');
+    const dot3 = document.querySelector('.dot-3');
+    const dot4 = document.querySelector('.dot-4');
+    const contactAvatar = document.getElementById('contactAvatar');
+    const contactName = document.getElementById('contactName');
+    const contactRelation = document.getElementById('contactRelation');
+
+
+  const contact = JSON.parse(localStorage.getItem('safeReachCurrentContact'));
+  if (contact) {
+    contactAvatar.textContent = contact.name.charAt(0).toUpperCase();
+    contactName.textContent   = contact.name;
+    contactRelation.textContent = (contact.relationship || 'Trusted Contact') + ' • Notified';
+  } else {
+    contactAvatar.textContent = '?';
+    contactName.textContent   = 'No Trusted Contact';
+    contactRelation.textContent = 'Go to Trusted Contacts to add one';
+  }
+
+  // Load all journey data from localStorage (single declarations)
+  const savedFrom    = localStorage.getItem('safeReachJourneyFrom');
+  const savedTo      = localStorage.getItem('safeReachJourneyTo');
+  const savedDistance = localStorage.getItem('safeReachJourneyDistance');
+  const savedArrival = localStorage.getItem('safeReachArrival');
+
+  // Populate journey From / To labels
+  if (savedFrom) document.getElementById('journeyFrom').textContent = savedFrom;
+  if (savedTo)   document.getElementById('journeyTo').textContent   = savedTo;
+
+  // Populate arrival time in the arrival box <strong>
+  if (savedArrival) {
+    const [h, m] = savedArrival.split(':');
+    const hr = parseInt(h), ampm = hr >= 12 ? 'PM' : 'AM';
+    const arrivalStrong = document.querySelector('.arrival-box div:first-child strong');
+    if (arrivalStrong) arrivalStrong.textContent = `${(hr % 12 || 12).toString().padStart(2,'0')}:${m} ${ampm}`;
+  }
+
+  // Populate destination in actions card
+  if (savedTo) {
+    document.getElementById('actionDesc').textContent = `Confirm your arrival once you reach ${savedTo}.`;
+  }
+
+  // Initialize timer from saved seconds (or fallback 30 mins)
+  let seconds  = parseInt(localStorage.getItem('safeReachSecondsLeft') || '1800');
+  let progress = 0;
+  let distance = 2.8;
+
+  // Populate distance
+  if (savedDistance) {
+    const parsedDist = parseFloat(savedDistance);
+    if (!isNaN(parsedDist)) {
+      distance = parsedDist;
+      document.getElementById('distanceRemaining').textContent = savedDistance;
+    } else {
+      distance = 3.5;
+      document.getElementById('distanceRemaining').textContent = '3.5 km';
+    }
+  } else {
+    distance = 3.5;
+    document.getElementById('distanceRemaining').textContent = '3.5 km';
+  }
+
+  function formatTime(totalSeconds) {
+    const hours   = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const secs    = totalSeconds % 60;
+    return `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  }
+
+  // Show initial timer value immediately
+  timerText.textContent = formatTime(seconds);
+
+    setInterval(() => {
+      if (seconds > 0) {
+        seconds--;
+        timerText.textContent = formatTime(seconds);
+      }
+    }, 1000);
+
+    reachedButton.addEventListener("click", () => {
+      window.location.href = "safe-arrival.html";
+    });
+// =========================
+// Initialize OpenStreetMap
+// =========================
+const map = L.map("map");
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+// Moving Marker
+// =========================
+// Fixed Start Marker
+// =========================
+
+// =========================
+// Coimbatore Location Database
+// =========================
+
+const locations = {
+
+    "psg college": [11.0247, 76.9446],
+
+    "sri ramakrishna college": [11.0822, 76.9795],
+
+    "race course": [11.0026, 76.9726],
+
+    "gandhipuram": [11.0168, 76.9675],
+
+    "coimbatore railway station": [11.0055, 76.9661],
+
+    "railway station": [11.0055, 76.9661],
+
+    "airport": [11.0300, 77.0434],
+
+    "coimbatore airport": [11.0300, 77.0434],
+
+    "ukkadam": [10.9912, 76.9585],
+
+    "rs puram": [11.0087, 76.9513],
+
+    "saibaba colony": [11.0285, 76.9380],
+
+    "singanallur": [11.0014, 77.0276],
+
+    "peelamedu": [11.0288, 76.9986],
+
+    "saravanampatti": [11.0817, 76.9958],
+
+    "vadavalli": [11.0434, 76.9062],
+
+    "brookefields": [11.0183, 76.9654],
+
+    "codissia": [11.0400, 77.0407],
+
+    "kmch": [11.0318, 77.0400],
+
+    "fun republic": [11.0275, 77.0018],
+
+    "town hall": [10.9986, 76.9617]
+
+};
+const fromName =
+(savedFrom || "").toLowerCase().trim();
+
+const toName =
+(savedTo || "").toLowerCase().trim();
+
+const startLatLng =
+locations[fromName] || [11.0168, 76.9558];
+
+const endLatLng =
+locations[toName] || [11.0069, 76.9618];
+
+const startMarker = L.marker(startLatLng)
+    .addTo(map)
+    .bindPopup("Journey Start");
+
+// =========================
+// Moving Avatar
+// =========================
+
+const gender = localStorage.getItem("safeReachGender") || "male";
+
+const avatarPath =
+    gender === "female"
+        ? "assets/avatars/female.png"
+        : "assets/avatars/male.png";
+
+const avatarIcon = L.icon({
+    iconUrl: avatarPath,
+    iconSize: [36, 60],
+    iconAnchor: [18, 58]
+});
+
+const movingMarker = L.marker(startLatLng, {
+    icon: avatarIcon
+}).addTo(map);
+
+// Destination Marker
+const destinationMarker = L.marker(endLatLng)
+    .addTo(map)
+    .bindPopup("Destination");
+    const bounds = L.latLngBounds([
+    startLatLng,
+    endLatLng
+]);
+
+map.fitBounds(bounds, {
+    padding: [60, 60]
+});
+    // Route coordinates
+const route = [];
+
+const steps = 40;
+
+for (let i = 0; i <= steps; i++) {
+
+    const lat =
+        startLatLng[0] +
+        ((endLatLng[0] - startLatLng[0]) * i / steps);
+
+    const lng =
+        startLatLng[1] +
+        ((endLatLng[1] - startLatLng[1]) * i / steps);
+
+    route.push([lat, lng]);
+
+}
+
+// Draw the route line
+
+const routeLine = L.polyline(route, {
+    color: "#2F80FF",
+    weight: 5,
+    opacity: 0.9
+}).addTo(map);
+
+let currentPoint = 0;
+
+
+    setInterval(() => {
+
+    if (currentPoint < route.length - 1) {
+
+        currentPoint++;
+
+        movingMarker.setLatLng(route[currentPoint]);
+
+        const decrementVal = isNaN(parseFloat(savedDistance)) ? 3.5 : parseFloat(savedDistance);
+        distance = Math.max(
+            0,
+            distance - (decrementVal / (route.length - 1))
+        );
+
+        distanceRemaining.textContent =
+            distance.toFixed(1) + " km";
+
+        progress =
+            (currentPoint / (route.length - 1)) * 100;
+
+        progressFill.style.width = progress + "%";
+
+        // Reset dots
+        dot1.classList.remove("done");
+        dot2.classList.remove("done");
+        dot3.classList.remove("done");
+        dot4.classList.remove("done");
+
+        // Started
+        dot1.classList.add("done");
+
+        // Midway
+        if (progress >= 33) {
+            dot2.classList.add("done");
+        }
+
+        // Near
+        if (progress >= 66) {
+            dot3.classList.add("done");
+        }
+
+        // Arrived
+        if (progress >= 100) {
+            dot4.classList.add("done");
+        }
+
+        locationUpdate.textContent = "Updated just now";
+
+    } else {
+        progress=100;
+        progressFill.style.width = "100%";
+        dot1.classList.add("done");
+        dot2.classList.add("done");
+        dot3.classList.add("done");
+        dot4.classList.add("done");
+
+        locationUpdate.textContent = "Journey Completed";
+        distanceRemaining.textContent = "0.0 km";
+      }
+
+}, 2000);
+const alertData = [
+  { text: 'Route is safe.', cls: 'safe',
+    icon: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#20ca61" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' },
+  { text: 'Street lights available ahead.', cls: 'safe',
+    icon: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#20ca61" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/></svg>' },
+  { text: 'Police patrol nearby — you are safe.', cls: 'safe',
+    icon: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#20ca61" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' },
+  { text: 'Moderate traffic detected ahead.', cls: 'warning',
+    icon: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffbe3d" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' },
+  { text: 'Road works ahead — use caution.', cls: 'warning',
+    icon: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffbe3d" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' },
+  { text: 'High-risk area detected ahead.', cls: 'danger',
+    icon: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef3157" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' },
+  { text: 'Hospital located nearby.', cls: 'safe',
+    icon: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#20ca61" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>' }
+];
+
+  let alertIndex = 0;
+  function updateAlert(a) {
+    liveAlert.className = 'live-alert ' + a.cls;
+    liveAlert.style.cssText = 'display:flex; align-items:center; gap:8px;';
+    liveAlert.innerHTML = a.icon + ' ' + a.text;
+  }
+  updateAlert(alertData[0]);
+  setInterval(() => {
+    alertIndex = (alertIndex + 1) % alertData.length;
+    updateAlert(alertData[alertIndex]);
+  }, 18000);
+ 
+</script>
+ 
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a href="index.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="start-journey.html" class="mob-nav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      Journey
+    </a>
+    <a href="safety-map.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Map
+    </a>
+    <a href="sos.html" class="mob-nav-item mob-nav-sos">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      SOS
+    </a>
+    <a href="settings.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+</body>
+</html>

@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeReach | Smart Journey Safety Dashboard</title>
+
+  <!-- Link to the external premium stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="mobile.css">
+  <link rel="stylesheet" href="shared.css">
+
+  <style>
+    /* Custom Popup Styles preserved from original index.html */
+    .popup {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px);
+    }
+
+    .popup.show {
+      display: grid;
+    }
+
+    .popup-box {
+      width: min(460px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow-y: auto;
+      padding: 28px;
+      border: 1px solid var(--purple);
+      border-radius: 16px;
+      color: white;
+      text-align: center;
+      background: linear-gradient(145deg, #17134b, #090d2b);
+      box-shadow: 0 0 40px rgba(143, 44, 255, 0.55);
+    }
+
+    .popup-box h2 {
+      margin: 0 0 12px;
+      font-weight: 800;
+      font-size: 24px;
+    }
+
+    .popup-box p {
+      margin: 0;
+      color: #d5d7ee;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .popup-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .popup-actions button {
+      min-width: 140px;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 16px;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .popup-actions button:hover {
+      filter: brightness(1.2);
+      transform: translateY(-1px);
+    }
+
+    .primary-popup-button {
+      background: linear-gradient(90deg, var(--purple), var(--pink));
+    }
+
+    .secondary-popup-button {
+      border: 1px solid #5c4da2 !important;
+      background: #25205b;
+    }
+
+    .help-popup-button,
+    .contact-popup-button {
+      border: 1px solid #5c4da2 !important;
+      background: #25205b;
+    }
+
+    .contact-popup-button {
+      width: 100%;
+      text-align: left;
+    }
+
+    .contact-selection-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .contact-check-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      background: #151b4b;
+      transition: background 0.2s;
+    }
+
+    .contact-check-row:hover {
+      background: #1e266a;
+    }
+
+    .contact-check-row input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--purple);
+    }
+
+    .contact-check-row strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .contact-check-row small {
+      display: block;
+      margin-top: 3px;
+      color: #c4c9e8;
+      font-size: 11px;
+    }
+
+    .selection-warning,
+    .form-warning {
+      display: none;
+      margin-top: 12px;
+      color: #ffb7c4;
+      font-size: 12px;
+    }
+
+    .selection-warning.show,
+    .form-warning.show {
+      display: block;
+    }
+
+    .report-form {
+      display: grid;
+      gap: 12px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .report-form label {
+      color: #e6e8ff;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .report-form select,
+    .report-form input,
+    .report-form textarea {
+      width: 100%;
+      margin-top: 6px;
+      border: 1px solid #5c4da2;
+      border-radius: 8px;
+      padding: 11px;
+      color: white;
+      font: inherit;
+      background: #151543;
+    }
+
+    .report-form textarea {
+      min-height: 88px;
+      resize: vertical;
+    }
+
+    .report-form select:focus,
+    .report-form input:focus,
+    .report-form textarea:focus {
+      outline: 2px solid var(--purple-light);
+      border-color: var(--purple-light);
+    }
+
+    @media (max-width: 520px) {
+      .popup-actions {
+        flex-direction: column;
+      }
+
+      .popup-actions button {
+        width: 100%;
+      }
+    }
+
+    /* Additional custom micro-animations for dashboard interactive elements */
+    .sos-circle.pulsing {
+      animation: pulse-ring 1.5s infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        box-shadow: 0 0 0 0px rgba(255, 76, 120, 0.7), 0 0 28px #ff2866;
+      }
+
+      70% {
+        box-shadow: 0 0 0 15px rgba(255, 76, 120, 0), 0 0 28px #ff2866;
+      }
+
+      100% {
+        box-shadow: 0 0 0 0px rgba(255, 76, 120, 0), 0 0 28px #ff2866;
+      }
+    }
+
+    /* Style corrections for cards in dashboard layout */
+    .card-link {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .nav-item {
+      text-decoration: none;
+    }
+
+    /* Dynamic active states and status indicators */
+    .status-active-badge {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      margin-right: 6px;
+    }
+
+    /* Avatar scaling & positioning adjusted to the left and larger */
+    .hero-avatar {
+      position: absolute;
+      right: 11%;
+      bottom: 0;
+      height: 310px;
+      width: auto;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 1024px) {
+      .hero-avatar {
+        height: 260px !important;
+        right: 8% !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero-avatar {
+        height: 180px !important;
+        right: 4% !important;
+        opacity: 0.4;
+      }
+    }
+
+    /* Sidebar Navigation visual redesign */
+    .sidebar {
+      background: rgba(10, 15, 45, 0.65) !important;
+      border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+      backdrop-filter: blur(20px) !important;
+      border-radius: 16px !important;
+    }
+
+    .brand {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 16px !important;
+      margin-bottom: 16px !important;
+    }
+
+    .sidebar-nav {
+      gap: 8px !important;
+    }
+
+    .sidebar-nav .nav-item {
+      position: relative;
+      border-radius: 8px !important;
+      background: transparent !important;
+      color: var(--muted) !important;
+      font-weight: 500;
+      padding: 12px 16px !important;
+      transition: all 0.25s ease !important;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .sidebar-nav .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 20%;
+      width: 3px;
+      height: 60%;
+      background: #5e2ae0;
+      border-radius: 0 4px 4px 0;
+      opacity: 0;
+      transition: all 0.25s ease;
+    }
+
+    .sidebar-nav .nav-item:hover {
+      color: white !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .sidebar-nav .nav-item.active {
+      color: white !important;
+      background: rgba(94, 42, 224, 0.15) !important;
+      font-weight: 700 !important;
+    }
+
+    .sidebar-nav .nav-item.active::before {
+      opacity: 1;
+      height: 60%;
+    }
+
+    .emergency-card {
+      margin-top: 20px !important;
+    }
+
+    /* Auto-expanding journey grid to fill empty spaces */
+    .journey-grid {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    /* Micro-animations and twinkle effects */
+    @keyframes twinkle {
+
+      0%,
+      100% {
+        opacity: 0.3;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
+    }
+
+    .stars {
+      animation: twinkle 4s infinite ease-in-out;
+    }
+
+    @keyframes statusPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 0 8px var(--green);
+      }
+
+      50% {
+        transform: scale(1.15);
+        opacity: 0.9;
+        box-shadow: 0 0 16px var(--green);
+      }
+    }
+
+    .status-active-badge {
+      animation: statusPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes waveHand {
+
+      0%,
+      100% {
+        transform: rotate(0deg);
+      }
+
+      20% {
+        transform: rotate(-15deg);
+      }
+
+      40% {
+        transform: rotate(10deg);
+      }
+
+      60% {
+        transform: rotate(-10deg);
+      }
+
+      80% {
+        transform: rotate(5deg);
+      }
+    }
+
+    .hero-card:hover #wave {
+      animation: waveHand 1.2s ease-in-out;
+      transform-origin: 70% 70%;
+      display: inline-block;
+    }
+
+    /* Card hover styling upgrade */
+    .card {
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    }
+
+    .card:hover {
+      transform: translateY(-4px) !important;
+      border-color: #40529d !important;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    /* ==========================================
+       PROFESSIONAL & ELEGANT BUTTON DESIGN SYSTEM
+       ========================================== */
+    .primary-button,
+    .sos-button,
+    .help-button,
+    .safe-button,
+    .cancel-button,
+    .late-button,
+    .filter-button {
+      position: relative;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 12px 20px;
+      transition: all 0.25s ease-in-out !important;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+    }
+
+    /* Primary Accent Button */
+    .primary-button {
+      background: #5e2ae0 !important;
+      color: white !important;
+    }
+
+    .primary-button:hover {
+      transform: translateY(-2px) !important;
+      background: #4b1fc2 !important;
+      box-shadow: 0 6px 15px rgba(94, 42, 224, 0.25) !important;
+    }
+
+    .primary-button:active {
+      transform: translateY(0) !important;
+    }
+
+    /* SOS Button - Urgent Red Alert */
+    .sos-button {
+      background: #d63031 !important;
+      width: 100% !important;
+      color: white !important;
+    }
+
+    .sos-button:hover {
+      transform: translateY(-2px) !important;
+      background: #b71c1c !important;
+      box-shadow: 0 6px 15px rgba(214, 48, 49, 0.25) !important;
+    }
+
+    /* Help Button - Dark Orange Alert */
+    .help-button {
+      background: #e67e22 !important;
+      width: 100% !important;
+      color: white !important;
+    }
+
+    .help-button:hover {
+      transform: translateY(-2px) !important;
+      background: #d35400 !important;
+      box-shadow: 0 6px 15px rgba(230, 126, 34, 0.25) !important;
+    }
+
+    /* Safe/Success Button - Forest Green */
+    .safe-button {
+      background: #2ecc71 !important;
+      color: white !important;
+    }
+
+    .safe-button:hover {
+      transform: translateY(-2px) !important;
+      background: #27ae60 !important;
+      box-shadow: 0 6px 15px rgba(46, 204, 113, 0.25) !important;
+    }
+
+    /* Late Button - Translucent Outlined */
+    .late-button {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      color: rgba(255, 255, 255, 0.85) !important;
+      width: 100% !important;
+    }
+
+    .late-button:hover {
+      transform: translateY(-2px) !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-color: rgba(255, 255, 255, 0.3) !important;
+      color: white !important;
+    }
+
+    /* Cancel Button - Translucent Red Outlined */
+    .cancel-button {
+      background: rgba(214, 48, 49, 0.08) !important;
+      border: 1px solid rgba(214, 48, 49, 0.3) !important;
+      color: #ff7675 !important;
+    }
+
+    .cancel-button:hover {
+      transform: translateY(-2px) !important;
+      background: #d63031 !important;
+      border-color: #d63031 !important;
+      color: white !important;
+      box-shadow: 0 6px 15px rgba(214, 48, 49, 0.2) !important;
+    }
+
+    /* Filter/Explore Button - Sleek Dark Indigo */
+    .filter-button {
+      background: #1e275f !important;
+      border: 1px solid #34408d !important;
+      color: white !important;
+    }
+
+    .filter-button:hover {
+      transform: translateY(-2px) !important;
+      background: #26317b !important;
+      border-color: #4858b7 !important;
+      box-shadow: 0 6px 15px rgba(30, 39, 95, 0.3) !important;
+    }
+
+    /* ==========================================
+       BODY & CORE LAYOUT ALIGNMENTS
+       ========================================== */
+    body {
+      background:
+        radial-gradient(circle at 50% 0%, #29266f 0%, transparent 34%),
+        #05071c !important;
+    }
+
+    /* ==========================================
+       QUICK ACTIONS CARD OVERHAUL
+       ========================================== */
+    .quick-card {
+      background: rgba(17, 24, 66, 0.4) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      backdrop-filter: blur(12px) !important;
+      position: relative;
+      border-bottom: 2px solid transparent !important;
+      transition: all 0.3s ease !important;
+    }
+
+    .quick-card.sos-action-card:hover {
+      background: rgba(30, 41, 99, 0.5) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+      border-bottom-color: #d63031 !important;
+      transform: translateY(-3px) !important;
+    }
+
+    .quick-card.share-loc-card:hover {
+      background: rgba(30, 41, 99, 0.5) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+      border-bottom-color: #5e2ae0 !important;
+      transform: translateY(-3px) !important;
+    }
+
+    .quick-card.safe-arrival-card:hover {
+      background: rgba(30, 41, 99, 0.5) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+      border-bottom-color: #2ecc71 !important;
+      transform: translateY(-3px) !important;
+    }
+
+    .quick-card.report-hazard-card:hover {
+      background: rgba(30, 41, 99, 0.5) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+      border-bottom-color: #3498db !important;
+      transform: translateY(-3px) !important;
+    }
+
+    /* ==========================================
+       SAFETY INSIGHTS TELEMETRY TILES
+       ========================================== */
+    .stat-card {
+      background: rgba(17, 24, 66, 0.3) !important;
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      backdrop-filter: blur(12px) !important;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease !important;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: transparent;
+    }
+
+    .stat-card.active-journeys::before {
+      background: #3498db;
+    }
+
+    .stat-card.safety-reports::before {
+      background: #e67e22;
+    }
+
+    .stat-card.verified-alerts::before {
+      background: #9b59b6;
+    }
+
+    .stat-card.people-protected::before {
+      background: #2ecc71;
+    }
+
+    .stat-card:hover {
+      background: rgba(30, 41, 99, 0.45) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+      transform: translateY(-3px) !important;
+    }
+
+    .stat-card h3 {
+      color: white !important;
+      background: none !important;
+      -webkit-background-clip: initial !important;
+      -webkit-text-fill-color: initial !important;
+      font-weight: 800;
+      font-size: 26px;
+    }
+
+    .sparkline path {
+      stroke-width: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">S</div>
+        <div>
+          <h1>SafeReach</h1>
+          <p>Smart Journey Safety</p>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="index.html" class="nav-item active">Dashboard</a>
+        <a href="start-journey.html" class="nav-item">Start Journey</a>
+        <a href="safety-map.html" class="nav-item">Safety Map</a>
+        <a href="my-journeys.html" class="nav-item">My Journeys</a>
+        <a href="reports.html" class="nav-item">Community Reports</a>
+        <a href="trusted-contacts.html" class="nav-item">Trusted Contacts</a>
+        <a href="sos.html" class="nav-item">Emergency SOS</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+      <div class="emergency-card">
+        <h3 class="emergency-title">EMERGENCY HELP</h3>
+        <p class="emergency-text">Need immediate help? Press SOS</p>
+        <button class="sos-button" id="sidebarSosButton">SOS ALERT</button>
+      </div>
+
+      <!-- Sidebar Safety Tip card -->
+      <div class="card sidebar-tip-card"
+        style="margin-top: 16px; padding: 12px; border-radius: 12px; background: rgba(17, 24, 66, 0.4); border: 1px dashed var(--border); font-size: 11px; color: var(--muted); text-align: left;">
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; color: #ffbf45;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: #ffbf45;">
+            <path
+              d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1 .3 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5">
+            </path>
+            <line x1="9" y1="18" x2="15" y2="18"></line>
+            <line x1="10" y1="22" x2="14" y2="22"></line>
+          </svg>
+          <strong>Safety Tip</strong>
+        </div>
+        <p style="margin: 0; line-height: 1.4; font-size: 10px;" id="sidebarSafetyTip">
+          Set up a default destination before leaving to enable automatic arrival notifications.
+        </p>
+      </div>
+    </aside>
+
+    <!-- Main Dashboard Content -->
+    <main class="main-content">
+
+      <!-- Topbar (Title only) -->
+      <header class="topbar">
+      <button class="mob-hamburger" onclick="openMobDrawer()" aria-label="Open menu" style="display:none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+        <h2 style="margin: 0; font-size: 22px; font-weight: 800; display: flex; align-items: center;">
+          <span class="status-active-badge"></span> Dashboard
+        </h2>
+      </header>
+
+      <!-- Main Grid Sections (Welcome + Mini Map) -->
+      <div class="main-grid">
+
+        <!-- Welcome Hero Card with Interactive Avatar -->
+        <section class="card hero-card">
+          <div class="stars"></div>
+
+          <!-- Topbar actions moved inside the Hero Welcome Card (top right corner) -->
+          <div class="topbar-actions"
+            style="position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; z-index: 10;">
+            <div class="weather-chip" style="margin: 0; display: flex; align-items: center; gap: 7px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffbf45" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: #ffbf45;">
+                <path
+                  d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41">
+                </path>
+                <path d="M22 17a3 3 0 0 0-3-3h-1.3a5 5 0 1 0-8.59-1H9a4 4 0 0 0 0 8h9a3 3 0 0 0 3-3z"
+                  fill="currentColor"></path>
+              </svg>
+              <div>
+                <strong>Partly Cloudy</strong>
+                <small>28°C • Tamil Nadu</small>
+              </div>
+            </div>
+            <a href="settings.html" style="text-decoration: none;">
+              <div class="profile-chip"
+                style="padding: 6px 12px; margin: 0; background: #111842; display: flex; align-items: center; gap: 7px;">
+                <img id="topAvatar" src="" class="profile-avatar"
+                  style="width:24px; height:24px; border-radius:50%; object-fit:cover; display:block;">
+                <span id="topName" style="color: white; font-size:12px; font-weight:600;">Loading...</span>
+                <span style="font-size: 8px; color: var(--muted); margin-left: 2px;">▼</span>
+              </div>
+            </a>
+          </div>
+          <div class="hero-content">
+            <p class="welcome-text">Welcome back,</p>
+            <h2 id="dashboardName" style="margin: 2px 0 10px; font-size: 34px; font-weight: 800; color: white;">
+              User! <span id="wave" style="display:inline-block;">👋</span>
+            </h2>
+            <p class="hero-subtext" style="max-width: 320px; line-height: 1.5;">Stay connected and protected on your
+              daily journeys.</p>
+
+            <div class="hero-message">
+              <div class="shield-icon"
+                style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(94, 42, 224, 0.2); border-radius: 50%; color: #b048ff; flex-shrink: 0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </div>
+              <div>
+                <strong>Safety Index High</strong>
+                <p>Your routes are fully updated with the latest community hazard alerts.</p>
+              </div>
+            </div>
+
+            <a href="start-journey.html" style="text-decoration: none; display: inline-block;">
+              <button class="primary-button" style="margin-top: 22px;">
+                Start Safe Journey <span style="margin-left: 6px;">➔</span>
+              </button>
+            </a>
+          </div>
+
+          <!-- Dynamic character avatar image loaded here via JS (size adjusted to home screen) -->
+          <img id="heroAvatar" src="" class="hero-avatar" alt="Character Avatar">
+        </section>
+
+        <!-- Safety Mini-Map Card -->
+        <section class="card map-card">
+          <div class="map-heading">
+            <div>
+              <h2>Route Safety Map</h2>
+              <p>Live community warnings & alerts</p>
+            </div>
+            <a href="safety-map.html" style="text-decoration: none;">
+              <button class="filter-button small-button">Explore Map</button>
+            </a>
+          </div>
+
+          <div class="map-area">
+            <div class="map-grid-lines"></div>
+            <div class="map-legend">
+              <strong>LEGEND</strong>
+              <span>● Safe Zones</span>
+              <span>● Heavy Traffic</span>
+              <span>● Poor Lighting</span>
+              <span>● High Crime</span>
+              <span>● Harassment</span>
+              <span>● Road Hazard</span>
+            </div>
+
+            <!-- Styled path lines -->
+            <div class="route-line"></div>
+            <div class="route-dot dot-one"></div>
+            <div class="route-dot dot-two"></div>
+            <div class="route-dot dot-three"></div>
+
+            <!-- Map Pin Overlays -->
+            <div class="map-pin orange-pin pin-one" title="Poor Lighting"></div>
+            <div class="map-pin red-pin pin-two" title="Suspicious Activity"></div>
+            <div class="map-pin green-pin pin-three" title="Safe SafeReach Zone"></div>
+            <div class="map-pin purple-pin pin-four" title="Heavy Traffic"></div>
+
+            <div class="report-popup">
+              <strong>COMMUNITY ALERT</strong>
+              <p>Suspicious activity reported near Race Course.</p>
+              <small>Reported 12m ago</small>
+            </div>
+          </div>
+
+          <div class="map-footer">
+            <div class="route-score">
+              <div class="score-circle">94</div>
+              <div>
+                <strong>Optimal Route Safety</strong>
+                <p>No high-risk zones along your path</p>
+              </div>
+            </div>
+            <div class="distance-info">
+              <div>
+                <small>DISTANCE</small>
+                <strong>6.2 km</strong>
+              </div>
+              <div>
+                <small>EST. TIME</small>
+                <strong>24 mins</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Quick Actions Section -->
+      <h3 style="margin: 24px 0 12px; font-size: 16px; font-weight: 700; color: white;">Quick Actions</h3>
+      <div class="quick-actions">
+        <div class="card quick-card sos-action-card" id="actionSos"
+          style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 18px 12px; min-height: 120px; justify-content: center; gap: 8px;">
+          <div class="quick-icon red-circle"
+            style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <strong style="font-size: 13px; color: white;">SOS Alert</strong>
+            <small style="font-size: 9px; color: var(--muted); display: block; line-height: 1.2;">Immediate
+              emergency</small>
+          </div>
+        </div>
+        <div class="card quick-card share-loc-card" id="actionShare"
+          style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 18px 12px; min-height: 120px; justify-content: center; gap: 8px;">
+          <div class="quick-icon purple-circle"
+            style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <strong style="font-size: 13px; color: white;">Share Location</strong>
+            <small style="font-size: 9px; color: var(--muted); display: block; line-height: 1.2;">Notify trusted
+              circle</small>
+          </div>
+        </div>
+        <div class="card quick-card safe-arrival-card" id="actionArrival"
+          style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 18px 12px; min-height: 120px; justify-content: center; gap: 8px;">
+          <div class="quick-icon green-circle"
+            style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <strong style="font-size: 13px; color: white;">Safe Arrival</strong>
+            <small style="font-size: 9px; color: var(--muted); display: block; line-height: 1.2;">Confirm safe
+              return</small>
+          </div>
+        </div>
+        <div class="card quick-card report-hazard-card" id="actionReport"
+          style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 18px 12px; min-height: 120px; justify-content: center; gap: 8px;">
+          <div class="quick-icon blue-circle"
+            style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <strong style="font-size: 13px; color: white;">Report Hazard</strong>
+            <small style="font-size: 9px; color: var(--muted); display: block; line-height: 1.2;">Flag unsafe
+              spots</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Safety Insights / Stats -->
+      <h3 style="margin: 24px 0 12px; font-size: 16px; font-weight: 700; color: white;">Safety Insights</h3>
+      <div class="stats-grid">
+        <div class="card stat-card active-journeys"
+          style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 16px 12px; min-height: 110px; position: relative;">
+          <div
+            style="display: flex; align-items: center; gap: 6px; width: 100%; justify-content: center; margin-bottom: 2px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.95;">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+            </svg>
+            <p
+              style="margin: 0; font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+              Active Journeys</p>
+          </div>
+          <h3 id="activeJourneysStat" style="margin: 4px 0 8px; font-size: 28px; font-weight: 800; color: white;">3</h3>
+          <svg class="sparkline" width="100%" height="20" viewBox="0 0 100 20"
+            style="position: absolute; bottom: 0; left: 0; width: 100%; pointer-events: none;">
+            <path d="M 0 16 Q 15 4, 30 10 T 60 2 T 85 14 T 100 6" fill="none" stroke="#3498db" stroke-width="1.5"
+              stroke-linecap="round"></path>
+          </svg>
+        </div>
+        <div class="card stat-card safety-reports"
+          style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 16px 12px; min-height: 110px; position: relative;">
+          <div
+            style="display: flex; align-items: center; gap: 6px; width: 100%; justify-content: center; margin-bottom: 2px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.95;">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            </svg>
+            <p
+              style="margin: 0; font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+              Safety Alerts</p>
+          </div>
+          <h3 id="safetyReportsStat" style="margin: 4px 0 8px; font-size: 28px; font-weight: 800; color: white;">5</h3>
+          <svg class="sparkline" width="100%" height="20" viewBox="0 0 100 20"
+            style="position: absolute; bottom: 0; left: 0; width: 100%; pointer-events: none;">
+            <path d="M 0 14 Q 15 22, 30 10 T 60 4 T 85 18 T 100 8" fill="none" stroke="#e67e22" stroke-width="1.5"
+              stroke-linecap="round"></path>
+          </svg>
+        </div>
+        <div class="card stat-card verified-alerts"
+          style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 16px 12px; min-height: 110px; position: relative;">
+          <div
+            style="display: flex; align-items: center; gap: 6px; width: 100%; justify-content: center; margin-bottom: 2px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9b59b6" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.95;">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <p
+              style="margin: 0; font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+              Verified Reports</p>
+          </div>
+          <h3 id="verifiedReportsStat" style="margin: 4px 0 8px; font-size: 28px; font-weight: 800; color: white;">12
+          </h3>
+          <svg class="sparkline" width="100%" height="20" viewBox="0 0 100 20"
+            style="position: absolute; bottom: 0; left: 0; width: 100%; pointer-events: none;">
+            <path d="M 0 8 Q 10 20, 20 6 T 40 18 T 60 10 T 85 2 T 100 12" fill="none" stroke="#9b59b6"
+              stroke-width="1.5" stroke-linecap="round"></path>
+          </svg>
+        </div>
+        <div class="card stat-card people-protected"
+          style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 16px 12px; min-height: 110px; position: relative;">
+          <div
+            style="display: flex; align-items: center; gap: 6px; width: 100%; justify-content: center; margin-bottom: 2px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.95;">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <p
+              style="margin: 0; font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+              People Protected</p>
+          </div>
+          <h3 id="peopleProtectedStat" style="margin: 4px 0 8px; font-size: 28px; font-weight: 800; color: white;">142
+          </h3>
+          <svg class="sparkline" width="100%" height="20" viewBox="0 0 100 20"
+            style="position: absolute; bottom: 0; left: 0; width: 100%; pointer-events: none;">
+            <path d="M 0 20 Q 15 4, 30 15 T 60 2 T 85 10 T 100 4" fill="none" stroke="#2ecc71" stroke-width="1.5"
+              stroke-linecap="round"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Active Tracking and SOS Controls -->
+      <h3 style="margin: 24px 0 12px; font-size: 16px; font-weight: 700; color: white;">Journey Controls</h3>
+      <div class="journey-grid">
+
+        <!-- Start Journey Input Card -->
+        <div class="card journey-card start-card" id="journeyStartCard">
+          <h3>Start a Journey</h3>
+          <p>Enter your destination to begin tracking and safety coverage.</p>
+          <label>DESTINATION</label>
+          <input type="text" id="journeyDestinationInput" placeholder="e.g. Race Course" class="location-input"
+            style="width:100%; color:white;">
+          <label>DURATION (MINUTES)</label>
+          <input type="number" id="journeyDurationInput" value="25" class="time-input" style="width:100%; color:white;">
+          <button class="primary-button full-button" id="journeyStartBtn">Start Tracking</button>
+        </div>
+
+        <!-- Active Tracking Live Progress Card -->
+        <div class="card journey-card" id="journeyActiveCard"
+          style="display: none; flex-direction: column; justify-content: space-between; padding: 20px;">
+          <div>
+            <div class="card-title-row" style="margin-bottom: 8px;">
+              <h3 style="font-size: 16px; font-weight: 800; color: white; margin: 0;">Tracking Active</h3>
+              <span class="live-badge"
+                style="background: rgba(47, 213, 108, 0.15); color: #2fd56c; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px;">LIVE</span>
+            </div>
+            <p style="color: var(--muted); font-size: 11px; line-height: 1.5; margin: 0 0 16px;">Your contacts are being
+              updated with your progress.</p>
+            <div class="journey-route"
+              style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: white; margin-bottom: 16px; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+              <span style="color: var(--muted);">Home</span>
+              <span style="color: var(--muted);">➔</span>
+              <span id="activeDestinationLabel" style="color: #b048ff;">Race Course</span>
+            </div>
+
+            <div class="time-row"
+              style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; text-align: center;">
+              <div
+                style="background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
+                <small
+                  style="display: block; font-size: 8px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase;">REMAINING</small>
+                <strong id="timerText" style="font-size: 12px; color: white; font-weight: 800;">00:25:00</strong>
+              </div>
+              <div
+                style="background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
+                <small
+                  style="display: block; font-size: 8px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase;">GPS
+                  SIGNAL</small>
+                <strong
+                  style="font-size: 12px; color: #2fd56c; font-weight: 800; display: flex; align-items: center; gap: 4px; justify-content: center;">
+                  <span class="pulse-dot"
+                    style="display: inline-block; width: 5px; height: 5px; background: #2fd56c; border-radius: 50%;"></span>
+                  HIGH
+                </strong>
+              </div>
+              <div
+                style="background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
+                <small
+                  style="display: block; font-size: 8px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase;">BATTERY</small>
+                <strong style="font-size: 12px; color: #ff9a42; font-weight: 800;">94%</strong>
+              </div>
+            </div>
+
+            <div class="progress-line"
+              style="display: flex; align-items: center; justify-content: space-between; margin: 20px 8px 24px; height: 2px; background: #1e2652; position: relative;">
+              <div class="progress-point complete"
+                style="width: 14px; height: 14px; border-radius: 50%; background: #2fd56c; border: 2px solid #2fd56c; z-index: 2;">
+              </div>
+              <div class="progress-point current"
+                style="width: 14px; height: 14px; border-radius: 50%; background: #3889ff; border: 2px solid #3889ff; box-shadow: 0 0 10px #3889ff; z-index: 2;">
+              </div>
+              <div class="progress-point"
+                style="width: 14px; height: 14px; border-radius: 50%; background: #11173c; border: 2px solid #6572a7; z-index: 2;">
+              </div>
+            </div>
+          </div>
+          <button class="safe-button full-button" id="reachedSafelyButton"
+            style="width: 100%; padding: 13px; font-size: 12px; margin-top: auto;">I Reached Safely</button>
+        </div>
+
+        <!-- Safe Arrival Success Card -->
+        <div class="card journey-card success-card" id="journeySuccessCard"
+          style="display: none; flex-direction: column; justify-content: space-between; padding: 20px;">
+          <div>
+            <h3 class="card-small-title"
+              style="color: #2fd56c; font-weight: 700; letter-spacing: 1px; font-size: 11px; margin-bottom: 8px;">
+              JOURNEY COMPLETED</h3>
+            <h3 style="font-size: 20px; font-weight: 800; margin: 4px 0 10px; color: white;">Safe Arrival!</h3>
+            <p style="color: var(--muted); font-size: 11px; line-height: 1.5; margin: 0 0 16px;">You have arrived at
+              your destination safely. Your trusted circle has been notified.</p>
+
+            <!-- Summary stats panel to fill empty space -->
+            <div
+              style="background: rgba(47, 213, 108, 0.08); border: 1px dashed rgba(47, 213, 108, 0.2); border-radius: 8px; padding: 12px; margin: 8px 0 16px; display: flex; flex-direction: column; gap: 6px;">
+              <div
+                style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #2fd56c; font-weight: 700;">
+                <span>JOURNEY SUMMARY</span>
+              </div>
+              <div
+                style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: white;">
+                <span>Distance & Duration</span>
+                <strong style="color: #2fd56c;">6.2 km • 24 mins</strong>
+              </div>
+            </div>
+          </div>
+          <button class="primary-button safe-button" id="successResetBtn"
+            style="width: 100%; padding: 13px; font-size: 12px; margin-top: auto;">Start New Journey</button>
+        </div>
+
+        <!-- Assistance Options Card -->
+        <div class="card journey-card pending-card" id="journeyAssistanceCard"
+          style="display: flex; flex-direction: column; justify-content: space-between; padding: 20px;">
+          <div>
+            <h3 class="card-small-title"
+              style="color: #ff9a42; font-weight: 700; letter-spacing: 1px; font-size: 11px; margin-bottom: 8px;">STATUS
+              ALERT</h3>
+            <h3 style="font-size: 20px; font-weight: 800; margin: 4px 0 10px; color: white;">Need Assistance?</h3>
+            <p style="color: var(--muted); font-size: 11px; line-height: 1.5; margin: 0 0 16px;">If you feel unsafe or
+              are delayed, use the options below to update your status.</p>
+
+            <!-- Emergency Support Hotline Panel to fill empty space -->
+            <div
+              style="background: rgba(255, 154, 66, 0.08); border: 1px dashed rgba(255, 154, 66, 0.2); border-radius: 8px; padding: 12px; margin: 8px 0 16px; display: flex; flex-direction: column; gap: 6px;">
+              <div
+                style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #ff9a42; font-weight: 700;">
+                <span>DIRECT HELP HOTLINES</span>
+                <span class="pulse-dot"
+                  style="width: 6px; height: 6px; background: #ff9a42; border-radius: 50%; display: inline-block;"></span>
+              </div>
+              <div
+                style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: white;">
+                <span>Police / Support Help</span>
+                <strong style="color: #ff9a42;">112 / 1091</strong>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: auto; width: 100%;">
+            <button class="help-button" id="needHelpButton" style="width: 100%; padding: 13px; font-size: 12px;">Need
+              Help Now</button>
+            <button class="late-button" id="safeLateButton" style="width: 100%; padding: 13px; font-size: 12px;">I Am
+              Safe but Late</button>
+          </div>
+        </div>
+
+        <!-- SOS Panel Card with Countdown -->
+        <div class="card journey-card sos-card" id="journeySosCard"
+          style="display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
+          <h3 class="card-small-title"
+            style="color: #ff4c75; font-weight: 700; letter-spacing: 1px; font-size: 11px; margin-bottom: 8px; width: 100%;">
+            SOS PANEL</h3>
+          <h4 style="margin: 4px 0 10px; color: #ff5c7c; font-size: 18px; font-weight: 800; width: 100%;">Emergency Help
+          </h4>
+          <div class="sos-circle" id="bigSosButton"
+            style="margin: 15px auto 10px; display: flex; align-items: center; justify-content: center;">
+            <span>SOS</span>
+          </div>
+          <p class="sos-timer" id="sosTimer" style="margin: 10px 0 15px; width: 100%;">3.0 sec</p>
+          <button class="cancel-button" id="cancelSosButton"
+            style="width: 100%; padding: 13px; font-size: 12px; margin-top: auto;">Cancel Alert</button>
+        </div>
+      </div>
+
+      <!-- Security / Feature Strip -->
+      <div class="card footer-strip"
+        style="background: linear-gradient(145deg, #090c29, #05071a); border-color:#1e2652; margin-top: 24px;">
+        <div>
+          <strong>256-bit Encryption</strong>
+          <span>Your location data is fully secured and private.</span>
+        </div>
+        <div>
+          <strong>Community Verified</strong>
+          <span>All hazard alerts are verified by local administrators.</span>
+        </div>
+        <div>
+          <strong>Automatic SOS Trigger</strong>
+          <span>If your timer expires and you do not respond, SOS alerts.</span>
+        </div>
+        <div>
+          <strong>Emergency Response</strong>
+          <span>Connected to local emergency services dispatch.</span>
+        </div>
+        <div>
+          <strong>Trusted Circle</strong>
+          <span>No-one outside your trusted contacts can track you.</span>
+        </div>
+      </div>
+
+      <!-- Interactive Modal Popup Box -->
+      <div class="popup" id="popup">
+        <div class="popup-box">
+          <h2 id="popupTitle">SafeReach</h2>
+          <p id="popupMessage"></p>
+          <div id="popupExtra"></div>
+          <div class="popup-actions" id="popupActions"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ==========================================
+    // Profile Check & Initial Setup
+    // ==========================================
+    const userName = localStorage.getItem("safeReachName");
+    const gender = localStorage.getItem("safeReachGender") || "male";
+
+    // Redirect to welcome registration if no user is found
+    if (!userName || !gender) {
+      window.location.href = "welcome.html";
+    }
+
+    // Set page topbar username and profile icon
+    document.getElementById("topName").textContent = userName;
+    const avatarImgPath = gender === "female" ? "assets/avatars/female.png" : "assets/avatars/male.png";
+    document.getElementById("topAvatar").src = avatarImgPath;
+
+    // Set Welcome Card text and dynamic character avatar
+    document.getElementById("dashboardName").innerHTML = `${userName}! <span id="wave" style="display:inline-block;">👋</span>`;
+    document.getElementById("heroAvatar").src = avatarImgPath;
+
+    // Safety Tip of the Day Randomizer
+    const safetyTips = [
+      "Set up a default destination before leaving to enable automatic arrival notifications.",
+      "Share your live tracking link with trusted contacts when traveling alone late at night.",
+      "Keep your phone battery above 20% to ensure active location reporting throughout your journey.",
+      "In an emergency, click the SOS button to instantly notify your trusted contacts and emergency dispatch.",
+      "Check the safety mini-map for hazard pins reported by local community members.",
+      "Add at least two trusted contacts to ensure they receive SMS emergency alerts."
+    ];
+    const randomTip = safetyTips[Math.floor(Math.random() * safetyTips.length)];
+    document.getElementById("sidebarSafetyTip").textContent = randomTip;
+
+    // ==========================================
+    // POPUP MODAL FUNCTIONALITY
+    // ==========================================
+    const popup = document.getElementById("popup");
+    const popupTitle = document.getElementById("popupTitle");
+    const popupMessage = document.getElementById("popupMessage");
+    const popupExtra = document.getElementById("popupExtra");
+    const popupActions = document.getElementById("popupActions");
+
+    function closePopup() {
+      popup.classList.remove("show");
+      popupExtra.innerHTML = "";
+    }
+
+    function showPopup(title, message, actions, extraContent = "") {
+      popupTitle.textContent = title;
+      popupMessage.textContent = message;
+      popupExtra.innerHTML = extraContent;
+      popupActions.innerHTML = "";
+
+      actions.forEach((action) => {
+        const button = document.createElement("button");
+        button.textContent = action.label;
+
+        if (action.type === "secondary") {
+          button.className = "secondary-popup-button";
+        } else if (action.type === "help") {
+          button.className = "help-popup-button";
+        } else if (action.type === "contact") {
+          button.className = "contact-popup-button";
+        } else {
+          button.className = "primary-popup-button";
+        }
+
+        button.addEventListener("click", action.onClick);
+        popupActions.appendChild(button);
+      });
+
+      popup.classList.add("show");
+    }
+
+    function showHelpConfirmation(title, message) {
+      showPopup(title, message, [
+        { label: "Done", type: "primary", onClick: closePopup }
+      ]);
+    }
+
+    // ==========================================
+    // SUB-MENUS AND MODAL FLOWS
+    // ==========================================
+
+    // Help Request Menu
+    function showNeedHelpMenu() {
+      showPopup(
+        "Need Help?",
+        "Choose the support you need. Use SOS only for immediate emergencies.",
+        [
+          { label: "Call Trusted Contact", type: "help", onClick: showCallContactSelection },
+          { label: "Share Live Location", type: "help", onClick: showLocationContactSelection },
+          { label: "Report Unsafe Situation", type: "help", onClick: showUnsafeReportForm },
+          { label: "Cancel", type: "secondary", onClick: closePopup }
+        ]
+      );
+    }
+
+    // Load contacts from localStorage — no hardcoded defaults
+    function getTrustedContacts() {
+      return JSON.parse(localStorage.getItem("safeReachTrustedContacts")) || [];
+    }
+
+    // Show List to Call Contacts
+    function showCallContactSelection() {
+      const contacts = getTrustedContacts();
+      const actions = contacts.map((contact) => ({
+        label: `${contact.name}${contact.primary ? " (Primary)" : ""} — ${contact.relationship}`,
+        type: "contact",
+        onClick: () => {
+          localStorage.setItem("safeReachCallContact", JSON.stringify(contact));
+          showHelpConfirmation(
+            "Call Request Ready",
+            `A demo call request has been prepared for ${contact.name}${contact.primary ? " (Primary Contact)" : ""}.`
+          );
+        }
+      }));
+
+      actions.push({ label: "Back", type: "secondary", onClick: showNeedHelpMenu });
+
+      showPopup(
+        "Choose a Trusted Contact",
+        "Select the person you want to contact.",
+        actions
+      );
+    }
+
+    // Show Checkboxes to Share Live Location
+    function showLocationContactSelection() {
+      const contacts = getTrustedContacts();
+      const contactRows = contacts.map((contact, index) => `
+        <label class="contact-check-row">
+          <input type="checkbox" class="location-contact-checkbox" value="${index}">
+          <span>
+            <strong>${contact.name}</strong>
+            <small>${contact.relationship || "Trusted Contact"}</small>
+          </span>
+        </label>
+      `).join("");
+
+      const extraContent = `
+        <div class="contact-selection-list">
+          ${contactRows}
+        </div>
+        <div class="selection-warning" id="selectionWarning">
+          Select at least one trusted contact to continue.
+        </div>
+      `;
+
+      showPopup(
+        "Share Live Location",
+        "Choose the trusted contacts who should receive your live location.",
+        [
+          { label: "Share Location", type: "primary", onClick: shareSelectedLocation },
+          { label: "Back", type: "secondary", onClick: showNeedHelpMenu }
+        ],
+        extraContent
+      );
+    }
+
+    function shareSelectedLocation() {
+      const selectedCheckboxes = document.querySelectorAll(".location-contact-checkbox:checked");
+      const warning = document.getElementById("selectionWarning");
+
+      if (selectedCheckboxes.length === 0) {
+        warning.classList.add("show");
+        return;
+      }
+
+      const contacts = getTrustedContacts();
+      const selectedContacts = Array.from(selectedCheckboxes).map((checkbox) => {
+        return contacts[Number(checkbox.value)];
+      });
+
+      const selectedNames = selectedContacts.map(contact => contact.name);
+
+      localStorage.setItem("safeReachHelpStatus", "location-shared");
+      localStorage.setItem("safeReachLocationRecipients", JSON.stringify(selectedContacts));
+      localStorage.setItem("safeReachSelectedContacts", JSON.stringify(selectedContacts));
+
+      showHelpConfirmation(
+        "Live Location Shared",
+        `Your live location has been shared with ${selectedNames.join(", ")}.`
+      );
+    }
+
+    // Report Unsafe Hazard Form
+    function showUnsafeReportForm() {
+      const extraContent = `
+        <div class="report-form">
+          <label>
+            What is happening?
+            <select id="unsafeReportType">
+              <option value="">Select a situation</option>
+              <option value="Unsafe route or poor lighting">Unsafe route or poor lighting</option>
+              <option value="Someone is following me">Someone is following me</option>
+              <option value="Harassment or suspicious behavior">Harassment or suspicious behavior</option>
+              <option value="Other concern">Other concern</option>
+            </select>
+          </label>
+
+          <label id="otherConcernField" style="display: none;">
+            Please specify the other concern <span style="color: #ffb7c4;">*</span>
+            <input id="unsafeReportOther" type="text" maxlength="80" placeholder="Enter the issue type">
+          </label>
+
+          <label>
+            Short description (optional)
+            <textarea id="unsafeReportDescription" maxlength="300" placeholder="Add any useful details, such as the area or what you noticed."></textarea>
+          </label>
+        </div>
+        <div class="form-warning" id="reportWarning">
+          Select a situation before sending the report.
+        </div>
+      `;
+
+      showPopup(
+        "Report Unsafe Situation",
+        "Share a non-emergency safety concern. For immediate danger, use SOS.",
+        [
+          { label: "Send Report", type: "primary", onClick: submitUnsafeReport },
+          { label: "Back", type: "secondary", onClick: showNeedHelpMenu }
+        ],
+        extraContent
+      );
+
+      const typeSelect = document.getElementById("unsafeReportType");
+      const otherConcernField = document.getElementById("otherConcernField");
+      const otherConcernInput = document.getElementById("unsafeReportOther");
+
+      typeSelect.addEventListener("change", () => {
+        const isOther = typeSelect.value === "Other concern";
+        otherConcernField.style.display = isOther ? "block" : "none";
+        otherConcernInput.required = isOther;
+        if (!isOther) {
+          otherConcernInput.value = "";
+        }
+      });
+    }
+
+    // Submit report logic
+    function submitUnsafeReport() {
+      const typeSelect = document.getElementById("unsafeReportType");
+      const descriptionInput = document.getElementById("unsafeReportDescription");
+      const otherConcernInput = document.getElementById("unsafeReportOther");
+      const warning = document.getElementById("reportWarning");
+
+      let reportType = typeSelect.value;
+      const description = descriptionInput.value.trim();
+      const otherConcern = otherConcernInput.value.trim();
+
+      if (!reportType) {
+        warning.textContent = "Select a situation before sending the report.";
+        warning.classList.add("show");
+        return;
+      }
+
+      if (reportType === "Other concern" && !otherConcern) {
+        warning.textContent = "Please enter the other concern before sending the report.";
+        warning.classList.add("show");
+        otherConcernInput.focus();
+        return;
+      }
+
+      if (reportType === "Other concern") {
+        reportType = otherConcern;
+      }
+
+      const reportData = {
+        type: reportType,
+        description: description,
+        createdAt: new Date().toISOString()
+      };
+
+      localStorage.setItem("safeReachHelpStatus", "unsafe-situation-reported");
+      localStorage.setItem("safeReachUnsafeReport", JSON.stringify(reportData));
+
+      showHelpConfirmation(
+        "Safety Report Sent",
+        `Your report about "${reportType}" has been recorded and shared with SafeReach support in this demo.`
+      );
+    }
+
+    // ==========================================
+    // ACTIVE JOURNEY STATE & TRACKING
+    // ==========================================
+    const journeyStartCard = document.getElementById("journeyStartCard");
+    const journeyActiveCard = document.getElementById("journeyActiveCard");
+    const journeySuccessCard = document.getElementById("journeySuccessCard");
+    const activeDestinationLabel = document.getElementById("activeDestinationLabel");
+    const timerText = document.getElementById("timerText");
+
+    const journeyDestinationInput = document.getElementById("journeyDestinationInput");
+    const journeyDurationInput = document.getElementById("journeyDurationInput");
+    const journeyStartBtn = document.getElementById("journeyStartBtn");
+    const successResetBtn = document.getElementById("successResetBtn");
+
+    let trackingTimer;
+    let secondsLeft = 1500;
+
+    // Check if journey was already active
+    const savedActiveJourney = localStorage.getItem("safeReachJourneyActive");
+    if (savedActiveJourney === "true") {
+      const dest = localStorage.getItem("safeReachDestination") || "Race Course";
+      const secs = parseInt(localStorage.getItem("safeReachSecondsLeft")) || 1500;
+      startLiveJourneyTracking(dest, secs);
+    }
+
+    function formatCountdownTime(totalSecs) {
+      const hrs = Math.floor(totalSecs / 3600);
+      const mins = Math.floor((totalSecs % 3600) / 60);
+      const secs = totalSecs % 60;
+      return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function startLiveJourneyTracking(destination, durationMinutes) {
+      clearInterval(trackingTimer);
+
+      // Update DOM
+      activeDestinationLabel.textContent = destination;
+      secondsLeft = isNaN(durationMinutes) ? durationMinutes : durationMinutes * 60;
+      timerText.textContent = formatCountdownTime(secondsLeft);
+
+      journeyStartCard.style.display = "none";
+      journeySuccessCard.style.display = "none";
+      journeyActiveCard.style.display = "block";
+
+      localStorage.setItem("safeReachJourneyActive", "true");
+      localStorage.setItem("safeReachDestination", destination);
+
+      trackingTimer = setInterval(() => {
+        if (secondsLeft > 0) {
+          secondsLeft--;
+          timerText.textContent = formatCountdownTime(secondsLeft);
+          localStorage.setItem("safeReachSecondsLeft", secondsLeft);
+        } else {
+          clearInterval(trackingTimer);
+          showPopup(
+            "Expected Arrival Exceeded",
+            "Your timer has run out! Please confirm if you reached safely. SOS alert will sound in 1 minute if no response.",
+            [
+              { label: "I Reached Safely", type: "primary", onClick: triggerSafeArrival },
+              { label: "Need Help", type: "help", onClick: showNeedHelpMenu }
+            ]
+          );
+        }
+      }, 1000);
+    }
+
+    // Start tracking click handler
+    journeyStartBtn.addEventListener("click", () => {
+      const destination = journeyDestinationInput.value.trim() || "Race Course";
+      const duration = parseInt(journeyDurationInput.value) || 25;
+
+      startLiveJourneyTracking(destination, duration);
+
+      showPopup(
+        "Journey Started",
+        `Your active journey tracking to "${destination}" is now online. Live location details are being shared in demo mode.`,
+        [{ label: "Got It", type: "primary", onClick: closePopup }]
+      );
+    });
+
+    function triggerSafeArrival() {
+      clearInterval(trackingTimer);
+      localStorage.removeItem("safeReachJourneyActive");
+      localStorage.removeItem("safeReachDestination");
+      localStorage.removeItem("safeReachSecondsLeft");
+
+      localStorage.setItem("safeReachJourneyDistance", "6.2 km");
+      localStorage.setItem("safeReachJourneyTime", "24 mins");
+
+      showPopup(
+        "Reached Safely?",
+        "Have you reached your destination safely? This will notify your trusted contacts and log the safe arrival.",
+        [
+          { label: "Not Yet", type: "secondary", onClick: closePopup },
+          {
+            label: "Yes, I Reached Safely",
+            type: "primary",
+            onClick: () => {
+              closePopup();
+              // Show Success Card in place of tracking cards
+              journeyActiveCard.style.display = "none";
+              journeySuccessCard.style.display = "block";
+              // Redirect to safe arrival summary after 2 seconds
+              setTimeout(() => {
+                window.location.href = "safe-arrival.html";
+              }, 1800);
+            }
+          }
+        ]
+      );
+    }
+
+    // Set reached safely handlers
+    document.getElementById("reachedSafelyButton").addEventListener("click", triggerSafeArrival);
+
+    // Reset layout for new journey from Success card
+    successResetBtn.addEventListener("click", () => {
+      journeySuccessCard.style.display = "none";
+      journeyActiveCard.style.display = "none";
+      journeyStartCard.style.display = "block";
+    });
+
+    // ==========================================
+    // EMERGENCY SOS BUTTON TIMER
+    // ==========================================
+    const bigSosButton = document.getElementById("bigSosButton");
+    const sosTimer = document.getElementById("sosTimer");
+    const cancelSosButton = document.getElementById("cancelSosButton");
+    const sidebarSosButton = document.getElementById("sidebarSosButton");
+    const actionSos = document.getElementById("actionSos");
+
+    let sosInterval;
+    let sosSeconds = 3.0;
+    let isSosTriggered = false;
+
+    function startSosAlertCountdown() {
+      if (isSosTriggered) return;
+      isSosTriggered = true;
+
+      // Add pulsing animations to SOS circle
+      bigSosButton.classList.add("pulsing");
+      sosSeconds = 3.0;
+      sosTimer.textContent = "3.0 sec";
+
+      sosInterval = setInterval(() => {
+        sosSeconds -= 0.1;
+        if (sosSeconds <= 0) {
+          clearInterval(sosInterval);
+          sosTimer.textContent = "Alert Sent";
+          bigSosButton.classList.remove("pulsing");
+          isSosTriggered = false;
+
+          localStorage.setItem("safeReachHelpStatus", "sos-alert-triggered");
+
+          showPopup(
+            "SOS Emergency Triggered",
+            "Emergency alerts have been sent! Your trusted contacts and local authorities have been notified with your live coordinates.",
+            [{ label: "Acknowledge", type: "primary", onClick: closePopup }]
+          );
+        } else {
+          sosTimer.textContent = `${sosSeconds.toFixed(1)} sec`;
+        }
+      }, 100);
+    }
+
+    function cancelSosAlert() {
+      if (!isSosTriggered) {
+        showPopup(
+          "SOS Status",
+          "There is no active emergency alert countdown to cancel.",
+          [{ label: "Close", type: "primary", onClick: closePopup }]
+        );
+        return;
+      }
+
+      clearInterval(sosInterval);
+      isSosTriggered = false;
+      bigSosButton.classList.remove("pulsing");
+      sosSeconds = 3.0;
+      sosTimer.textContent = "3.0 sec";
+
+      showPopup(
+        "SOS Cancelled",
+        "The emergency SOS countdown was successfully aborted. No notifications were sent.",
+        [{ label: "Phew! Close", type: "primary", onClick: closePopup }]
+      );
+    }
+
+    // Set SOS Event Listeners
+    bigSosButton.addEventListener("click", startSosAlertCountdown);
+    cancelSosButton.addEventListener("click", cancelSosAlert);
+
+    // Sidebar SOS and Quick Action SOS trigger countdown directly
+    sidebarSosButton.addEventListener("click", () => {
+      document.getElementById("journeySosCard").scrollIntoView({ behavior: 'smooth' });
+      setTimeout(startSosAlertCountdown, 500);
+    });
+
+    actionSos.addEventListener("click", () => {
+      document.getElementById("journeySosCard").scrollIntoView({ behavior: 'smooth' });
+      setTimeout(startSosAlertCountdown, 500);
+    });
+
+    // ==========================================
+    // OTHER BUTTONS / ACTIONS CONNECTS
+    // ==========================================
+
+    // Quick Action Share Location
+    document.getElementById("actionShare").addEventListener("click", () => {
+      showLocationContactSelection();
+    });
+
+    // Quick Action Safe Arrival
+    document.getElementById("actionArrival").addEventListener("click", triggerSafeArrival);
+
+    // Quick Action Report Hazard
+    document.getElementById("actionReport").addEventListener("click", () => {
+      showUnsafeReportForm();
+    });
+
+    // Need Help & Safe but Late Buttons
+    document.getElementById("needHelpButton").addEventListener("click", showNeedHelpMenu);
+
+    document.getElementById("safeLateButton").addEventListener("click", () => {
+      showPopup(
+        "Safe but Running Late?",
+        "Are you safe but running late? This will update your ETA and reassure your trusted contacts.",
+        [
+          { label: "Cancel", type: "secondary", onClick: closePopup },
+          {
+            label: "Yes, Update Circle",
+            type: "primary",
+            onClick: () => {
+              closePopup();
+              window.location.href = "safe-arrival.html";
+            }
+          }
+        ]
+      );
+    });
+
+    // Close modal on background clicks
+    popup.addEventListener("click", (event) => {
+      if (event.target === popup) {
+        closePopup();
+      }
+    });
+
+  </script>
+  <!-- Mobile Drawer Overlay -->
+  <div class="mob-drawer-overlay" id="mobDrawerOverlay" onclick="closeMobDrawer()"></div>
+
+  <!-- Mobile Slide-out Drawer -->
+  <nav class="mob-drawer" id="mobDrawer" aria-label="Mobile menu">
+    <div class="mob-drawer-header">
+      <a href="index.html" class="mob-drawer-brand">
+        <div class="mob-drawer-brand-mark">S</div>
+        <div>
+          <strong>SafeReach</strong>
+          <small>Smart Journey Safety</small>
+        </div>
+      </a>
+      <button class="mob-drawer-close" onclick="closeMobDrawer()" aria-label="Close menu">✕</button>
+    </div>
+    <div class="mob-drawer-nav">
+      <a href="index.html" class="active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Dashboard
+      </a>
+      <a href="start-journey.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        Start Journey
+      </a>
+      <a href="safety-map.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Safety Map
+      </a>
+      <a href="my-journeys.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        My Journeys
+      </a>
+      <a href="reports.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Community Reports
+      </a>
+      <a href="trusted-contacts.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Trusted Contacts
+      </a>
+      <a href="settings.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+    </div>
+    <a href="sos.html" class="mob-drawer-sos">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Emergency SOS
+    </a>
+  </nav>
+
+  <script>
+    function openMobDrawer() {
+      document.getElementById('mobDrawer').classList.add('open');
+      document.getElementById('mobDrawerOverlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobDrawer() {
+      document.getElementById('mobDrawer').classList.remove('open');
+      document.getElementById('mobDrawerOverlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobDrawer(); });
+  </script>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a href="index.html" class="mob-nav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="start-journey.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      Journey
+    </a>
+    <a href="safety-map.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Map
+    </a>
+    <a href="sos.html" class="mob-nav-item mob-nav-sos">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      SOS
+    </a>
+    <a href="settings.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+</body>
+
+</html>

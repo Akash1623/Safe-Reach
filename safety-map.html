@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SafeReach — Live community safety map and hazard alerts for Coimbatore.">
+  <title>SafeReach | Safety Map</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile.css">
+  <style>
+    /* ── Layout ── */
+    .sm-layout {
+      display: grid;
+      grid-template-columns: 1.35fr 0.65fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ── Map Card ── */
+    .map-card {
+      padding: 20px;
+    }
+
+    .map-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .map-top h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .map-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .map-control {
+      padding: 6px 14px;
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .map-control:hover,
+    .map-control.active {
+      background: rgba(123, 63, 242, 0.25);
+      border-color: var(--purple);
+      color: white;
+    }
+
+    /* ── Map Area ── */
+    .map-area {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: linear-gradient(160deg, #0e1e38 0%, #111e3c 50%, #0c1528 100%);
+      border: 1px solid var(--border2);
+    }
+
+    /* Grid overlay */
+    .map-area::before {
+      content: "";
+      position: absolute;
+      inset: -20px;
+      background:
+        repeating-linear-gradient(0deg, transparent 0 28px, rgba(255,255,255,0.04) 29px 30px),
+        repeating-linear-gradient(90deg, transparent 0 36px, rgba(255,255,255,0.04) 37px 38px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Roads ── */
+    .road {
+      position: absolute;
+      background: rgba(180, 190, 230, 0.18);
+      z-index: 1;
+    }
+
+    .road.one  { left: 0; right: 0; top: 52%; height: 14px; transform: rotate(-4deg); }
+    .road.two  { left: 38%; top: 0; bottom: 0; width: 12px; transform: rotate(6deg); }
+    .road.three { left: 0; right: 0; top: 30%; height: 9px; transform: rotate(2deg); opacity: 0.6; }
+
+    /* ── Safety Zones ── */
+    .safe-zone, .caution-zone, .risk-zone {
+      position: absolute;
+      border-radius: 50%;
+      z-index: 2;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .safe-zone {
+      background: radial-gradient(circle, rgba(32,202,97,0.22) 0%, rgba(32,202,97,0.06) 70%);
+      border: 1.5px solid rgba(32,202,97,0.35);
+    }
+
+    .caution-zone {
+      background: radial-gradient(circle, rgba(255,190,61,0.22) 0%, rgba(255,190,61,0.06) 70%);
+      border: 1.5px solid rgba(255,190,61,0.35);
+    }
+
+    .risk-zone {
+      background: radial-gradient(circle, rgba(239,49,87,0.25) 0%, rgba(239,49,87,0.07) 70%);
+      border: 1.5px solid rgba(239,49,87,0.40);
+    }
+
+    .zone-a { width: 160px; height: 160px; left: 6%;  top: 8%; }
+    .zone-b { width: 130px; height: 130px; right: 10%; top: 18%; }
+    .zone-c { width: 110px; height: 110px; left: 40%; top: 42%; }
+    .zone-d { width: 140px; height: 140px; left: 20%; top: 30%; }
+
+    /* ── Route Line ── */
+    .route-line {
+      position: absolute;
+      z-index: 3;
+      left: 14%;
+      top: 24%;
+      width: 62%;
+      height: 4px;
+      background: linear-gradient(90deg, #2d85ff, #8e2cff);
+      border-radius: 4px;
+      box-shadow: 0 0 12px rgba(45,133,255,0.6);
+      transform: rotate(14deg);
+      transform-origin: left center;
+    }
+
+    .route-line::after {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border-radius: 4px;
+      background: inherit;
+      opacity: 0.25;
+      filter: blur(6px);
+    }
+
+    /* ── Pins ── */
+    .pin {
+      position: absolute;
+      z-index: 5;
+      width: 22px;
+      height: 30px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+    }
+
+    .pin::after {
+      content: "";
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .start-pin { left: 12%;  top: 18%;  background: #2d85ff; box-shadow: 0 0 14px rgba(45,133,255,0.7); }
+    .end-pin   { right: 14%; top: 52%; background: #ef3157; box-shadow: 0 0 14px rgba(239,49,87,0.7); }
+
+    /* ── Service Markers ── */
+    .service-marker {
+      position: absolute;
+      z-index: 5;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    }
+
+    .police   { background: #1a52c4; left: 42%; top: 58%; }
+    .hospital { background: #c41a4a; left: 64%; top: 20%; }
+
+    /* ── Street Lights ── */
+    .light {
+      position: absolute;
+      z-index: 4;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ffe566;
+      box-shadow: 0 0 10px 4px rgba(255,229,102,0.55);
+    }
+
+    .light.one   { left: 18%; top: 50%; }
+    .light.two   { left: 32%; top: 47%; }
+    .light.three { left: 50%; top: 44%; }
+    .light.four  { left: 66%; top: 42%; }
+    .light.five  { left: 78%; top: 40%; }
+
+    /* ── Map Labels ── */
+    .map-label {
+      position: absolute;
+      z-index: 6;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 9px;
+      font-weight: 700;
+      white-space: nowrap;
+      backdrop-filter: blur(6px);
+      pointer-events: none;
+    }
+
+    .label-start   { left: 7%;   top: 7%;   background: rgba(45,133,255,0.3);  color: #90c8ff; border: 1px solid rgba(45,133,255,0.4); }
+    .label-end     { right: 10%; bottom: 16%; background: rgba(239,49,87,0.3);  color: #ff9090; border: 1px solid rgba(239,49,87,0.4); }
+    .label-police  { left: 44%;  bottom: 12%; background: rgba(26,82,196,0.3); color: #90b0ff; border: 1px solid rgba(26,82,196,0.4); }
+    .label-hospital{ right: 8%;  top: 16%;  background: rgba(196,26,74,0.3);  color: #ffb0b0; border: 1px solid rgba(196,26,74,0.4); }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      background: rgba(9,15,47,0.5);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-safe    { background: #20ca61; }
+    .legend-caution { background: #ffbe3d; }
+    .legend-risk    { background: #ef3157; }
+    .legend-route   { background: linear-gradient(90deg, #2d85ff, #8e2cff); border-radius: 3px; width: 20px; height: 5px; }
+    .legend-light   { background: #ffe566; box-shadow: 0 0 6px #ffe566; }
+
+    /* ── Side Panel ── */
+    .side-panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    /* Score Card */
+    .score-card {
+      padding: 20px;
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(17,24,70,0.9), rgba(8,12,41,0.9));
+    }
+
+    .score-card h2 {
+      margin: 0 0 4px;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .score-card > p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .score-area {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .score-circle {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      border: 5px solid #20ca61;
+      border-left-color: transparent;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      font-weight: 800;
+      flex-shrink: 0;
+      color: #20ca61;
+    }
+
+    .score-area strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .score-area span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .safety-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .safety-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      background: rgba(9,15,47,0.5);
+      font-size: 11px;
+    }
+
+    .safety-row span:last-child {
+      color: #20ca61;
+      font-weight: 700;
+    }
+
+    /* Route Card */
+    .route-card {
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(17,24,70,0.9), rgba(8,12,41,0.9));
+    }
+
+    .route-card h2 {
+      margin: 0 0 4px;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .route-card > p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .route-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .route-box {
+      padding: 10px;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      background: rgba(9,15,47,0.5);
+    }
+
+    .route-box small {
+      display: block;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .route-box strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #20ca61;
+      min-height: 18px;
+      text-align: center;
+    }
+
+    /* Nearby Card */
+    .nearby-card {
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(17,24,70,0.9), rgba(8,12,41,0.9));
+    }
+
+    .nearby-card h2 {
+      margin: 0 0 4px;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .nearby-card > p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .nearby-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .nearby-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      background: rgba(9,15,47,0.5);
+    }
+
+    .nearby-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      font-weight: 800;
+      flex-shrink: 0;
+      color: white;
+    }
+
+    .police-icon   { background: linear-gradient(145deg, #1a52c4, #1038a0); }
+    .hospital-icon { background: linear-gradient(145deg, #c41a4a, #a01038); }
+    .light-icon    { background: linear-gradient(145deg, #b08700, #8c6a00); font-size: 16px; }
+
+    .nearby-item strong {
+      display: block;
+      font-size: 12px;
+    }
+
+    .nearby-item small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    @media (max-width: 860px) {
+      .sm-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sr-page sr-fade-in">
+
+    <header class="sr-topbar">
+      <a href="index.html" class="sr-brand" aria-label="SafeReach Home">
+        <div class="sr-brand-mark">S</div>
+        <div>
+          <strong>SafeReach</strong>
+          <small>Your Safety, Our Priority</small>
+        </div>
+      </a>
+      <a href="index.html" class="sr-back-btn">← Back to Dashboard</a>
+    </header>
+
+    <section class="sr-section-heading">
+      <h1>Coimbatore Safety Map</h1>
+      <p>Explore safer areas, support services, street-light coverage, and route safety information.</p>
+    </section>
+
+    <section class="sm-layout">
+
+      <!-- Map Card -->
+      <article class="sr-card map-card">
+        <div class="map-top">
+          <h2>Live Safety Overview</h2>
+          <div class="map-controls">
+            <button class="map-control active" data-filter="all">All</button>
+            <button class="map-control" data-filter="safe">Safe Zones</button>
+            <button class="map-control" data-filter="risk">Risk Zones</button>
+          </div>
+        </div>
+
+        <div class="map-area" id="mapArea">
+          <!-- Roads -->
+          <div class="road one"></div>
+          <div class="road two"></div>
+          <div class="road three"></div>
+
+          <!-- Safety Zones -->
+          <div class="safe-zone zone-a"   data-zone="safe"></div>
+          <div class="safe-zone zone-b"   data-zone="safe"></div>
+          <div class="caution-zone zone-c" data-zone="caution"></div>
+          <div class="risk-zone zone-d"   data-zone="risk"></div>
+
+          <!-- Route -->
+          <div class="route-line"></div>
+
+          <!-- Pins -->
+          <div class="pin start-pin"></div>
+          <div class="pin end-pin"></div>
+
+          <!-- Service Markers -->
+          <div class="service-marker police">P</div>
+          <div class="service-marker hospital">+</div>
+
+          <!-- Street Lights -->
+          <div class="light one"></div>
+          <div class="light two"></div>
+          <div class="light three"></div>
+          <div class="light four"></div>
+          <div class="light five"></div>
+
+          <!-- Labels -->
+          <div class="map-label label-start">SR-CAS</div>
+          <div class="map-label label-end">Race Course</div>
+          <div class="map-label label-police">Police Station</div>
+          <div class="map-label label-hospital">Hospital</div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot legend-safe"></span> Safe Zone</div>
+          <div class="legend-item"><span class="legend-dot legend-caution"></span> Caution Zone</div>
+          <div class="legend-item"><span class="legend-dot legend-risk"></span> Higher-Risk Zone</div>
+          <div class="legend-item"><span class="legend-dot legend-route"></span> Recommended Route</div>
+          <div class="legend-item"><span class="legend-dot legend-light"></span> Street Light</div>
+        </div>
+      </article>
+
+      <!-- Side Panel -->
+      <aside class="side-panel">
+
+        <!-- Safety Score -->
+        <article class="score-card">
+          <h2>Route Safety Score</h2>
+          <p>For Sri Ramakrishna College of Arts and Science to Race Course.</p>
+
+          <div class="score-area">
+            <div class="score-circle">82</div>
+            <div>
+              <strong>Good Route</strong>
+              <span>Recommended for evening travel</span>
+            </div>
+          </div>
+
+          <div class="safety-list">
+            <div class="safety-row">
+              <span>Street-light coverage</span>
+              <span>High</span>
+            </div>
+            <div class="safety-row">
+              <span>Nearby support services</span>
+              <span>3 available</span>
+            </div>
+            <div class="safety-row">
+              <span>Reported caution areas</span>
+              <span style="color:#ffbe3d;">1 nearby</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Recommended Route -->
+        <article class="sr-card sr-card-pad route-card">
+          <h2>Recommended Safer Route</h2>
+          <p>Designed to avoid the higher-risk zone shown on the map.</p>
+
+          <div class="route-summary">
+            <div class="route-box">
+              <small>Distance</small>
+              <strong>6.2 km</strong>
+            </div>
+            <div class="route-box">
+              <small>Travel Time</small>
+              <strong>18 mins</strong>
+            </div>
+          </div>
+
+          <button class="sr-btn sr-btn-primary sr-btn-full" id="useRouteButton" style="margin-top:14px;">
+            Use This Safer Route →
+          </button>
+
+          <div class="status" id="statusMessage"></div>
+        </article>
+
+        <!-- Nearby Support -->
+        <article class="sr-card sr-card-pad nearby-card">
+          <h2>Nearby Support</h2>
+          <p>Important locations available near the recommended route.</p>
+
+          <div class="nearby-list">
+            <div class="nearby-item">
+              <div class="nearby-icon police-icon">P</div>
+              <div>
+                <strong>Gandhipuram Police Station</strong>
+                <small>Approx. 1.1 km from route</small>
+              </div>
+            </div>
+
+            <div class="nearby-item">
+              <div class="nearby-icon hospital-icon">+</div>
+              <div>
+                <strong>Government Hospital</strong>
+                <small>Approx. 1.6 km from route</small>
+              </div>
+            </div>
+
+            <div class="nearby-item">
+              <div class="nearby-icon light-icon">💡</div>
+              <div>
+                <strong>Street-light Coverage</strong>
+                <small>High coverage on main route</small>
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    // ── Filter Controls ──
+    const filterButtons = document.querySelectorAll(".map-control");
+    const zones = document.querySelectorAll("[data-zone]");
+
+    filterButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        const filter = button.dataset.filter;
+        filterButtons.forEach(b => b.classList.remove("active"));
+        button.classList.add("active");
+
+        zones.forEach(zone => {
+          const match = filter === "all"
+            || zone.dataset.zone === filter
+            || (filter === "risk" && zone.dataset.zone === "caution");
+
+          zone.style.opacity   = match ? "1"    : "0.1";
+          zone.style.transform = match ? "scale(1)" : "scale(0.88)";
+        });
+      });
+    });
+
+    // ── Use Route Button ──
+    document.getElementById("useRouteButton").addEventListener("click", () => {
+      const msg = document.getElementById("statusMessage");
+      msg.textContent = "✅ Safer route selected. Opening Start Journey...";
+      setTimeout(() => window.location.href = "start-journey.html", 900);
+    });
+  </script>
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a href="index.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="start-journey.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      Journey
+    </a>
+    <a href="safety-map.html" class="mob-nav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Map
+    </a>
+    <a href="sos.html" class="mob-nav-item mob-nav-sos">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      SOS
+    </a>
+    <a href="settings.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+</body>
+</html>

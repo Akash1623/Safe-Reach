@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SafeReach — Manage your profile and safety preferences.">
+  <title>SafeReach | Settings &amp; Profile</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile.css">
+  <style>
+    .layout {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 18px;
+    }
+
+    /* Profile Card */
+    .profile-avatar-wrap {
+      width: 90px;
+      height: 90px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      font-size: 32px;
+      font-weight: 800;
+      color: white;
+      background: linear-gradient(145deg, #3eabff, #304fcf);
+      border: 3px solid #55a6ff;
+      box-shadow: 0 0 28px rgba(85, 166, 255, 0.4);
+    }
+
+    .profile-avatar-wrap.female {
+      background: linear-gradient(145deg, #ff7394, #7039e4);
+      border-color: #ff70a4;
+      box-shadow: 0 0 28px rgba(255, 112, 164, 0.4);
+    }
+
+    .profile-card-inner { text-align: center; }
+
+    .profile-card-inner h2 { margin: 0; font-size: 19px; font-weight: 800; }
+    .profile-card-inner .sub {
+      margin: 5px 0 18px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .profile-info { display: grid; gap: 8px; text-align: left; }
+
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 13px;
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      background: rgba(9, 15, 47, 0.6);
+    }
+
+    .profile-row span { color: var(--muted); font-size: 10px; font-weight: 600; }
+    .profile-row strong { color: white; font-size: 11px; text-align: right; }
+
+    /* Settings Sections */
+    .settings-area { display: grid; gap: 18px; }
+
+    .section-head { margin: 0 0 4px; font-size: 17px; font-weight: 800; }
+    .section-note {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .setting-list { display: grid; gap: 8px; }
+
+    .danger-card {
+      border-color: #80334a;
+      background: linear-gradient(145deg, #29102a, #160919) !important;
+    }
+
+    .danger-card .section-head { color: #ffc0ca; }
+
+    .danger-btn {
+      width: 100%;
+      border: 1px solid #c14a63;
+      border-radius: 10px;
+      padding: 12px;
+      color: #ffd4da;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      background: #461522;
+      transition: all 0.2s;
+    }
+
+    .danger-btn:hover { background: #5a1c2a; }
+
+    /* Edit Modal Form */
+    .form-grid { display: grid; gap: 14px; }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      .sr-topbar { flex-wrap: wrap; }
+      .profile-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+<div class="sr-page sr-fade-in">
+
+  <!-- Topbar -->
+  <header class="sr-topbar">
+    <a href="index.html" class="sr-brand" aria-label="SafeReach Home">
+      <div class="sr-brand-mark">S</div>
+      <div>
+        <strong>SafeReach</strong>
+        <small>Your Safety, Our Priority</small>
+      </div>
+    </a>
+    <a href="index.html" class="sr-back-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back to Dashboard
+    </a>
+  </header>
+
+  <!-- Page Heading -->
+  <section class="sr-section-heading">
+    <h1>Settings &amp; Profile</h1>
+    <p>Manage your profile information and choose how SafeReach supports you during journeys.</p>
+  </section>
+
+  <!-- Layout -->
+  <section class="layout">
+
+    <!-- Profile Card -->
+    <article class="sr-card sr-card-pad profile-card-inner">
+      <div class="profile-avatar-wrap" id="avatarCircle">A</div>
+      <h2 id="profileName">Loading…</h2>
+      <p class="sub" id="profileSub">SafeReach User</p>
+
+      <div class="profile-info">
+        <div class="profile-row">
+          <span>Phone</span>
+          <strong id="profilePhone">—</strong>
+        </div>
+        <div class="profile-row">
+          <span>Gender</span>
+          <strong id="profileGender">—</strong>
+        </div>
+        <div class="profile-row">
+          <span>Safety Mode</span>
+          <strong id="profileMode">Smart Protection</strong>
+        </div>
+        <div class="profile-row">
+          <span>Member Since</span>
+          <strong id="profileSince">—</strong>
+        </div>
+      </div>
+
+      <button class="sr-btn sr-btn-primary sr-btn-full" id="openEditModal" style="margin-top:16px;">Edit Profile</button>
+    </article>
+
+    <!-- Settings Panel -->
+    <section class="settings-area">
+
+      <!-- Journey Safety -->
+      <article class="sr-card sr-card-pad">
+        <h2 class="section-head">Journey Safety Preferences</h2>
+        <p class="section-note">Control alerts and safety support during an active journey.</p>
+
+        <div class="setting-list">
+          <div class="sr-setting-row">
+            <div>
+              <strong>Live Location Sharing</strong>
+              <small>Share your real-time location with trusted contacts during journeys.</small>
+            </div>
+            <label class="sr-switch">
+              <input type="checkbox" checked data-setting="Live location sharing" id="sw-location">
+              <span class="sr-switch-track"></span>
+            </label>
+          </div>
+
+          <div class="sr-setting-row">
+            <div>
+              <strong>Arrival Reminder</strong>
+              <small>Remind you to confirm safe arrival at your destination.</small>
+            </div>
+            <label class="sr-switch">
+              <input type="checkbox" checked data-setting="Arrival reminder" id="sw-arrival">
+              <span class="sr-switch-track"></span>
+            </label>
+          </div>
+
+          <div class="sr-setting-row">
+            <div>
+              <strong>Automatic Delay Alert</strong>
+              <small>Notify trusted contacts if your journey takes longer than expected.</small>
+            </div>
+            <label class="sr-switch">
+              <input type="checkbox" checked data-setting="Automatic delay alert" id="sw-delay">
+              <span class="sr-switch-track"></span>
+            </label>
+          </div>
+
+          <div class="sr-setting-row">
+            <div>
+              <strong>SOS Confirmation</strong>
+              <small>Show a 3-second countdown before sending an SOS alert.</small>
+            </div>
+            <label class="sr-switch">
+              <input type="checkbox" checked data-setting="SOS confirmation" id="sw-sos">
+              <span class="sr-switch-track"></span>
+            </label>
+          </div>
+        </div>
+      </article>
+
+      <!-- Safety Mode -->
+      <article class="sr-card sr-card-pad">
+        <h2 class="section-head">Safety Preferences</h2>
+        <p class="section-note">Choose how SafeReach recommends routes and handles alerts.</p>
+
+        <div class="setting-list">
+          <div class="sr-setting-row">
+            <div>
+              <strong>Preferred Safety Mode</strong>
+              <small>SafeReach will prioritize this when recommending routes.</small>
+            </div>
+            <select class="sr-select" id="safetyMode" style="max-width:160px; padding:8px 10px; font-size:11px;">
+              <option>Smart Protection</option>
+              <option>Maximum Safety</option>
+              <option>Balanced Route</option>
+              <option>Fastest Route</option>
+            </select>
+          </div>
+
+          <div class="sr-setting-row">
+            <div>
+              <strong>Check-in Interval</strong>
+              <small>How often to prompt you for a safety check-in during journeys.</small>
+            </div>
+            <select class="sr-select" id="checkinInterval" style="max-width:160px; padding:8px 10px; font-size:11px;">
+              <option>Every 5 mins</option>
+              <option>Every 10 mins</option>
+              <option>Every 15 mins</option>
+              <option>Never</option>
+            </select>
+          </div>
+        </div>
+      </article>
+
+      <!-- Danger Zone -->
+      <article class="sr-card sr-card-pad danger-card">
+        <h2 class="section-head">Account</h2>
+        <p class="section-note">These actions affect your SafeReach profile data stored in this browser.</p>
+        <div style="display:grid; gap:8px;">
+          <button class="danger-btn" id="resetSettingsBtn">Reset Settings to Default</button>
+          <button class="danger-btn" id="clearProfileBtn" style="background:#1a0a0f; border-color:#6b2038;">Clear Profile &amp; Start Over</button>
+        </div>
+      </article>
+
+    </section>
+  </section>
+
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="sr-modal-overlay" id="editModal" onclick="handleOverlayClick(event)">
+  <div class="sr-modal">
+    <h2>Edit Profile</h2>
+    <p>Update your SafeReach profile information below.</p>
+
+    <form id="profileForm">
+      <div class="form-grid">
+        <div>
+          <label class="sr-label" for="editName">Full Name</label>
+          <input class="sr-input" type="text" id="editName" required>
+        </div>
+        <div>
+          <label class="sr-label" for="editPhone">Phone Number</label>
+          <input class="sr-input" type="tel" id="editPhone" maxlength="10" inputmode="numeric" required>
+        </div>
+        <div>
+          <label class="sr-label" for="editGender">Gender</label>
+          <select class="sr-select" id="editGender">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sr-modal-actions">
+        <button type="button" class="sr-btn sr-btn-ghost" id="closeEditModal">Cancel</button>
+        <button type="submit" class="sr-btn sr-btn-primary">Save Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="sr-toast" id="toast"></div>
+
+<script>
+  // ── Auth Guard ──
+  if (!localStorage.getItem("safeReachName")) {
+    window.location.href = "welcome.html";
+  }
+
+  // ── Load Profile from localStorage ──
+  function loadProfile() {
+    const name   = localStorage.getItem("safeReachName") || "User";
+    const phone  = localStorage.getItem("safeReachPhone") || "—";
+    const gender = localStorage.getItem("safeReachGender") || "—";
+    const mode   = localStorage.getItem("safeReachSafetyMode") || "Smart Protection";
+    const since  = localStorage.getItem("safeReachSince") || setMemberSince();
+
+    const avatarEl = document.getElementById("avatarCircle");
+    avatarEl.textContent = name.charAt(0).toUpperCase();
+    avatarEl.classList.toggle("female", gender === "female");
+
+    document.getElementById("profileName").textContent = name;
+    document.getElementById("profileSub").textContent  = `${name.split(" ")[0]} · SafeReach User`;
+    document.getElementById("profilePhone").textContent = formatPhone(phone);
+    document.getElementById("profileGender").textContent = gender.charAt(0).toUpperCase() + gender.slice(1);
+    document.getElementById("profileMode").textContent  = mode;
+    document.getElementById("profileSince").textContent = since;
+
+    // Load safety mode select
+    document.getElementById("safetyMode").value = mode;
+  }
+
+  function setMemberSince() {
+    const d = new Date();
+    const since = d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+    localStorage.setItem("safeReachSince", since);
+    return since;
+  }
+
+  function formatPhone(p) {
+    if (p.length === 10) return `${p.slice(0,5)} ${p.slice(5)}`;
+    return p;
+  }
+
+  // ── Toast ──
+  function showToast(msg, type = "info") {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3200);
+  }
+
+  // ── Edit Modal ──
+  document.getElementById("openEditModal").addEventListener("click", () => {
+    document.getElementById("editName").value  = localStorage.getItem("safeReachName") || "";
+    document.getElementById("editPhone").value = localStorage.getItem("safeReachPhone") || "";
+    document.getElementById("editGender").value = localStorage.getItem("safeReachGender") || "male";
+    document.getElementById("editModal").classList.add("open");
+    document.getElementById("editName").focus();
+  });
+
+  document.getElementById("closeEditModal").addEventListener("click", () => {
+    document.getElementById("editModal").classList.remove("open");
+  });
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById("editModal")) {
+      document.getElementById("editModal").classList.remove("open");
+    }
+  }
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") document.getElementById("editModal").classList.remove("open");
+  });
+
+  // Phone sanitize
+  document.getElementById("editPhone").addEventListener("input", function () {
+    this.value = this.value.replace(/\D/g, "").slice(0, 10);
+  });
+
+  document.getElementById("profileForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const name  = document.getElementById("editName").value.trim();
+    const phone = document.getElementById("editPhone").value.trim();
+    const gender = document.getElementById("editGender").value;
+
+    if (!name || name.length < 2) return showToast("Please enter a valid name (min 2 chars).");
+    if (phone.length !== 10)      return showToast("Please enter a valid 10-digit phone number.");
+
+    localStorage.setItem("safeReachName",   name);
+    localStorage.setItem("safeReachPhone",  phone);
+    localStorage.setItem("safeReachGender", gender);
+
+    document.getElementById("editModal").classList.remove("open");
+    loadProfile();
+    showToast("Profile updated successfully.");
+  });
+
+  // ── Safety Mode ──
+  document.getElementById("safetyMode").addEventListener("change", function () {
+    localStorage.setItem("safeReachSafetyMode", this.value);
+    document.getElementById("profileMode").textContent = this.value;
+    showToast(`Safety mode set to: ${this.value}`);
+  });
+
+  // ── Toggles ──
+  document.querySelectorAll("input[data-setting]").forEach(sw => {
+    const key = `safeReachToggle_${sw.id}`;
+    // Load saved state
+    if (localStorage.getItem(key) !== null) {
+      sw.checked = localStorage.getItem(key) === "true";
+    }
+    sw.addEventListener("change", function () {
+      localStorage.setItem(key, this.checked);
+      showToast(`${this.dataset.setting} ${this.checked ? "enabled" : "disabled"}.`);
+    });
+  });
+
+  // ── Reset Settings ──
+  document.getElementById("resetSettingsBtn").addEventListener("click", () => {
+    document.querySelectorAll("input[data-setting]").forEach(sw => {
+      sw.checked = true;
+      localStorage.removeItem(`safeReachToggle_${sw.id}`);
+    });
+    document.getElementById("safetyMode").value = "Smart Protection";
+    localStorage.setItem("safeReachSafetyMode", "Smart Protection");
+    document.getElementById("profileMode").textContent = "Smart Protection";
+    showToast("Settings reset to defaults.");
+  });
+
+  // ── Clear Profile ──
+  document.getElementById("clearProfileBtn").addEventListener("click", () => {
+    if (confirm("This will clear your profile and all journey data. Are you sure?")) {
+      localStorage.clear();
+      window.location.href = "welcome.html";
+    }
+  });
+
+  // ── Init ──
+  loadProfile();
+</script>
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a href="index.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="start-journey.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      Journey
+    </a>
+    <a href="safety-map.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Map
+    </a>
+    <a href="sos.html" class="mob-nav-item mob-nav-sos">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      SOS
+    </a>
+    <a href="settings.html" class="mob-nav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+</body>
+</html>

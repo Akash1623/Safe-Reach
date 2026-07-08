@@ -1,0 +1,722 @@
+/* ============================================================
+   SafeReach — Mobile-First Responsive Overrides
+   Fixes the "desktop shrunk on mobile" problem
+   ============================================================ */
+
+/* ── Base: Ensure viewport fills correctly ── */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* ── Touch targets: minimum 44px for all interactive elements ── */
+.nav-item,
+.sr-btn,
+.sr-back-btn,
+button {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* ============================================================
+   DESKTOP (> 950px): Keep original sidebar layout
+   ============================================================ */
+@media (min-width: 951px) {
+  .mobile-bottom-nav { display: none !important; }
+  .mobile-header { display: none !important; }
+  .sidebar { display: flex !important; }
+  .app-shell { padding-bottom: 0 !important; }
+}
+
+/* ============================================================
+   TABLET (601px – 950px): Compact sidebar → icon rail
+   ============================================================ */
+@media (max-width: 950px) {
+  /* Kill the old horizontal scrolling nav hack */
+  .sidebar {
+    display: none !important;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr !important;
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+
+  .main-content {
+    padding: 0 12px 80px;
+  }
+
+  .topbar {
+    padding: 14px 0 10px;
+  }
+}
+
+/* ============================================================
+   MOBILE (≤ 600px): Full mobile-app experience
+   ============================================================ */
+@media (max-width: 600px) {
+
+  /* ── App shell: single column, no sidebar ── */
+  .app-shell {
+    grid-template-columns: 1fr !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    min-height: 100dvh;
+  }
+
+  .sidebar {
+    display: none !important;
+  }
+
+  .main-content {
+    padding: 0 14px 84px !important;
+    min-width: 0;
+  }
+
+  /* ── Mobile top header ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(5, 7, 28, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(40, 54, 111, 0.5);
+    padding: 12px 14px;
+    margin: 0 -14px;
+    width: calc(100% + 28px);
+    min-height: 56px;
+  }
+
+  .topbar h2 {
+    font-size: 18px !important;
+  }
+
+  /* Move the weather/profile chip into topbar nicely */
+  .topbar-actions {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    gap: 8px !important;
+    z-index: auto !important;
+  }
+
+  .weather-chip {
+    display: none !important; /* hide weather on mobile – saves space */
+  }
+
+  .profile-chip {
+    padding: 4px 10px !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(40, 54, 111, 0.6);
+  }
+
+  /* ── Hero Card: mobile-friendly ── */
+  .hero-card {
+    min-height: 200px !important;
+    padding: 20px !important;
+    margin-top: 14px;
+    overflow: hidden;
+  }
+
+  .hero-card .welcome-text {
+    font-size: 13px !important;
+    margin-bottom: 2px;
+  }
+
+  #dashboardName {
+    font-size: 24px !important;
+    margin: 2px 0 8px !important;
+  }
+
+  .hero-subtext {
+    font-size: 12px !important;
+    max-width: 65% !important;
+  }
+
+  .hero-message {
+    font-size: 11px !important;
+    max-width: 58% !important;
+    padding: 8px 10px !important;
+  }
+
+  .hero-message p {
+    font-size: 10px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* ── Main grid: stack hero + map ── */
+  .main-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  /* ── Map card: cap height on mobile ── */
+  .map-card {
+    min-height: auto !important;
+  }
+
+  .map-area {
+    height: 160px !important;
+    min-height: 160px !important;
+  }
+
+  /* ── Quick actions: 2-col grid ── */
+  .quick-actions {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .quick-card {
+    min-height: 100px !important;
+    padding: 14px 10px !important;
+  }
+
+  /* ── Stats grid: 2-col ── */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .stat-card {
+    min-height: 95px !important;
+    padding: 12px 10px !important;
+  }
+
+  .stat-card h3 {
+    font-size: 22px !important;
+  }
+
+  /* ── Journey grid: single column ── */
+  .journey-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* ── Footer strip: single column ── */
+  .footer-strip {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+
+  .footer-strip div {
+    border-right: 0 !important;
+    border-bottom: 1px solid #283568;
+    padding: 10px 14px !important;
+    font-size: 12px;
+  }
+
+  .footer-strip div:last-child {
+    border-bottom: 0;
+  }
+
+  /* ── Section headings ── */
+  .main-content h3 {
+    font-size: 15px !important;
+    margin: 18px 0 10px !important;
+  }
+
+  /* ── Buttons: full-width friendlier sizing ── */
+  .primary-button,
+  .safe-button,
+  .help-button,
+  .cancel-button,
+  .late-button,
+  .sos-button {
+    padding: 13px 16px !important;
+    font-size: 13px !important;
+    min-height: 48px !important;
+  }
+
+  /* ── Inputs: larger tap area ── */
+  .location-input,
+  .time-input,
+  .sr-input,
+  .sr-select,
+  .sr-textarea {
+    padding: 13px 12px !important;
+    font-size: 15px !important; /* prevents iOS auto-zoom */
+    min-height: 48px !important;
+  }
+
+  /* ── Cards general ── */
+  .card {
+    border-radius: 14px !important;
+  }
+
+  /* ── SOS circle ── */
+  .sos-circle {
+    width: 110px !important;
+    height: 110px !important;
+    font-size: 22px !important;
+  }
+
+  /* ── Popup ── */
+  .popup-box {
+    padding: 20px 16px !important;
+  }
+
+  .popup-box h2 {
+    font-size: 20px !important;
+  }
+
+  .popup-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .popup-actions button {
+    width: 100% !important;
+    min-height: 48px !important;
+  }
+}
+
+/* ============================================================
+   BOTTOM NAVIGATION BAR — replaces sidebar on mobile
+   ============================================================ */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 950px) {
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(8, 10, 38, 0.97);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(40, 54, 111, 0.6);
+    padding: 6px 4px max(8px, env(safe-area-inset-bottom));
+    gap: 0;
+    justify-content: space-around;
+    align-items: stretch;
+  }
+
+  .mob-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex: 1;
+    padding: 6px 4px;
+    text-decoration: none;
+    color: rgba(174, 184, 220, 0.7);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    border-radius: 10px;
+    transition: color 0.2s ease, background 0.2s ease;
+    min-height: 48px;
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    font-family: "Manrope", Arial, sans-serif;
+  }
+
+  .mob-nav-item svg {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+
+  .mob-nav-item.active {
+    color: #b348ff;
+  }
+
+  .mob-nav-item.active svg {
+    filter: drop-shadow(0 0 6px rgba(179, 72, 255, 0.6));
+  }
+
+  .mob-nav-item:active {
+    background: rgba(143, 44, 255, 0.1);
+  }
+
+  .mob-nav-sos {
+    color: #ff4c78 !important;
+  }
+
+  .mob-nav-sos svg {
+    filter: drop-shadow(0 0 4px rgba(255, 76, 120, 0.4));
+  }
+
+  .mob-nav-sos.active svg,
+  .mob-nav-sos:active svg {
+    filter: drop-shadow(0 0 8px rgba(255, 76, 120, 0.7));
+  }
+}
+
+/* ============================================================
+   MOBILE HEADER — replaces sidebar brand on mobile
+   ============================================================ */
+.mobile-header {
+  display: none;
+}
+
+@media (max-width: 950px) {
+  /* The existing topbar doubles as the mobile header — 
+     we just make sure brand is visible in it */
+  .sr-topbar .sr-brand strong {
+    font-size: 16px;
+  }
+}
+
+/* ============================================================
+   SAFE AREA / NOTCH SUPPORT
+   ============================================================ */
+@supports (padding-top: env(safe-area-inset-top)) {
+  @media (max-width: 950px) {
+    .topbar {
+      padding-left: max(14px, env(safe-area-inset-left)) !important;
+      padding-right: max(14px, env(safe-area-inset-right)) !important;
+    }
+
+    .main-content {
+      padding-left: max(14px, env(safe-area-inset-left)) !important;
+      padding-right: max(14px, env(safe-area-inset-right)) !important;
+    }
+  }
+}
+
+/* ============================================================
+   OTHER PAGES — shared.css-based pages (welcome, settings, etc.)
+   ============================================================ */
+@media (max-width: 600px) {
+
+  /* Welcome page */
+  .welcome-box {
+    padding: 24px 18px !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    min-height: 100dvh;
+    box-shadow: none !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .welcome-title {
+    font-size: 22px !important;
+  }
+
+  .welcome-sub {
+    font-size: 12px !important;
+  }
+
+  .gender-card {
+    padding: 14px 8px !important;
+  }
+
+  .gender-icon {
+    width: 64px !important;
+    height: 64px !important;
+  }
+
+  /* Section headings on sub-pages */
+  .sr-section-heading h1 {
+    font-size: 22px !important;
+  }
+
+  /* sr-page wrapper */
+  .sr-page {
+    width: 100% !important;
+    padding: 14px 14px 80px !important;
+  }
+
+  /* Topbar on sub-pages */
+  .sr-topbar {
+    margin-bottom: 18px !important;
+    flex-wrap: wrap;
+    gap: 10px !important;
+  }
+
+  /* Modal actions */
+  .sr-modal-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Setting rows — stack vertically so toggle is always below text */
+  .sr-setting-row {
+    padding: 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .sr-setting-row .sr-switch {
+    margin-top: 2px;
+  }
+
+  /* Stat grids */
+  .sr-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sr-grid-3 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ============================================================
+   iOS AUTO-ZOOM FIX — inputs must be >= 16px font-size
+   ============================================================ */
+@media (max-width: 600px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Welcome page: hide bottom nav (it's just a setup form) */
+  body:has(.welcome-box) .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  /* Sub-pages using .sr-page: ensure bottom padding for nav */
+  .sr-page {
+    padding-bottom: max(84px, calc(80px + env(safe-area-inset-bottom))) !important;
+  }
+
+  /* Emergency/SOS pages: larger touch targets for critical actions */
+  .sos-html .sr-btn,
+  .sos-html button {
+    min-height: 56px !important;
+  }
+}
+
+/* ============================================================
+   HAMBURGER MENU — slide-out drawer on mobile
+   ============================================================ */
+@media (max-width: 950px) {
+
+  /* Hamburger button in topbar */
+  .mob-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(40, 54, 111, 0.6);
+    border-radius: 10px;
+    background: rgba(17, 24, 67, 0.7);
+    cursor: pointer;
+    flex-shrink: 0;
+    color: white;
+    transition: background 0.2s;
+  }
+
+  .mob-hamburger:hover {
+    background: rgba(143, 44, 255, 0.15);
+    border-color: var(--purple);
+  }
+
+  /* Overlay backdrop */
+  .mob-drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .mob-drawer-overlay.open {
+    display: block;
+  }
+
+  /* Drawer panel */
+  .mob-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 201;
+    background: linear-gradient(160deg, #0d1040, #070920);
+    border-right: 1px solid rgba(40, 54, 111, 0.7);
+    box-shadow: 8px 0 40px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    padding: 0 0 max(20px, env(safe-area-inset-bottom));
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .mob-drawer.open {
+    transform: translateX(0);
+  }
+
+  /* Drawer header */
+  .mob-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 18px 16px;
+    border-bottom: 1px solid rgba(40, 54, 111, 0.5);
+  }
+
+  .mob-drawer-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    text-decoration: none;
+  }
+
+  .mob-drawer-brand-mark {
+    width: 36px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 15px;
+    color: white;
+    background: linear-gradient(145deg, #b348ff, #5522d6);
+    clip-path: polygon(50% 0%, 95% 18%, 84% 76%, 50% 100%, 16% 76%, 5% 18%);
+    flex-shrink: 0;
+  }
+
+  .mob-drawer-brand strong {
+    display: block;
+    font-size: 17px;
+    font-weight: 800;
+  }
+
+  .mob-drawer-brand small {
+    display: block;
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 500;
+  }
+
+  .mob-drawer-close {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(40, 54, 111, 0.5);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    transition: all 0.2s;
+  }
+
+  .mob-drawer-close:hover {
+    color: white;
+    border-color: var(--purple);
+  }
+
+  /* Drawer nav links */
+  .mob-drawer-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mob-drawer-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    border-radius: 10px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    min-height: 48px;
+  }
+
+  .mob-drawer-nav a:hover,
+  .mob-drawer-nav a.active {
+    color: white;
+    background: rgba(143, 44, 255, 0.12);
+  }
+
+  .mob-drawer-nav a.active {
+    border-left: 3px solid var(--purple);
+    padding-left: 11px;
+  }
+
+  .mob-drawer-nav a svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  .mob-drawer-nav a.active svg,
+  .mob-drawer-nav a:hover svg {
+    opacity: 1;
+  }
+
+  /* Drawer SOS button at bottom */
+  .mob-drawer-sos {
+    margin: 10px 14px 0;
+    padding: 14px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff4e78, #c60c42);
+    color: white;
+    font-weight: 800;
+    font-size: 14px;
+    border: 0;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(237, 49, 86, 0.3);
+  }
+}
+
+/* ============================================================
+   HERO AVATAR — slightly bigger and correctly centered on mobile
+   (ID selector used so this reliably overrides the legacy
+   inline .hero-avatar rules in index.html regardless of load order)
+   ============================================================ */
+@media (max-width: 600px) {
+  #heroAvatar.hero-avatar {
+    height: 200px !important;
+    right: 14px !important;
+    bottom: 0 !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+@media (max-width: 380px) {
+  #heroAvatar.hero-avatar {
+    height: 165px !important;
+  }
+}
+
+/* Show hamburger only on mobile/tablet */
+.mob-hamburger {
+  display: none;
+}
+
+@media (max-width: 950px) {
+  .mob-hamburger {
+    display: flex !important;
+  }
+}

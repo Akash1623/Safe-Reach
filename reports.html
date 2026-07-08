@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="SafeReach — View and submit community safety reports.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeReach | Community Safety Reports</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile.css">
+  <style>
+    /* ── Modal Overlay ── */
+    .sr-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(5px);
+    }
+
+    .sr-modal-overlay.show {
+      display: grid;
+    }
+
+    .sr-modal {
+      width: min(480px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      border: 1px solid #3b2d80;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #17134b, #090d2b);
+      box-shadow: 0 0 50px rgba(143, 44, 255, 0.3);
+      animation: modalIn 0.22s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0)     scale(1); }
+    }
+
+    .sr-modal h2 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .sr-modal > p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .sr-modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    /* ── Toast Notification ── */
+    .sr-toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      z-index: 2000;
+      padding: 12px 22px;
+      border-radius: 30px;
+      background: linear-gradient(90deg, #7040ff, #a42cff);
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(112, 64, 255, 0.45);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .sr-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── Page heading row ── */
+    .sr-section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    /* ── Info Banner ── */
+    .sr-info-banner {
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: rgba(45, 133, 255, 0.1);
+      border: 1px solid rgba(45, 133, 255, 0.25);
+      color: #90b8ff;
+      font-size: 11px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    /* ── Filter Bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+
+    .filter-button {
+      padding: 8px 18px;
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-button:hover,
+    .filter-button.active {
+      background: rgba(123, 63, 242, 0.2);
+      border-color: var(--purple);
+      color: white;
+    }
+
+    /* ── Reports Grid ── */
+    .reports-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── Report Card ── */
+    .report-card {
+      padding: 18px;
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(17,24,70,0.9), rgba(8,12,41,0.9));
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.25s;
+    }
+
+    .report-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.3);
+    }
+
+    .report-card.hidden {
+      display: none;
+    }
+
+    /* Top row: icon + title + badge */
+    .report-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .report-title {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .report-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      font-weight: 800;
+      flex-shrink: 0;
+      color: white;
+    }
+
+    /* Icon colours by card status */
+    .report-card[data-status="caution"] .report-icon { background: linear-gradient(145deg, #c4740a, #a05800); }
+    .report-card[data-status="safe"]    .report-icon { background: linear-gradient(145deg, #14943e, #0c7230); }
+    .report-card[data-status="resolved"].report-icon { background: linear-gradient(145deg, #1050c4, #0c3aa0); }
+
+    .report-title h2 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .report-title p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    /* ── Badges ── */
+    .sr-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .sr-badge-orange { background: rgba(196,116,10,0.2); color: #ffbe3d; border: 1px solid rgba(196,116,10,0.4); }
+    .sr-badge-green  { background: rgba(20,148,62,0.2);  color: #4dff8e; border: 1px solid rgba(20,148,62,0.4); }
+    .sr-badge-blue   { background: rgba(16,80,196,0.2);  color: #7ab2ff; border: 1px solid rgba(16,80,196,0.4); }
+
+    /* ── Description ── */
+    .report-description {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    /* ── Info Rows ── */
+    .report-info {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 10px;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      background: rgba(9,15,47,0.5);
+      font-size: 11px;
+    }
+
+    .info-row span { color: var(--muted); }
+    .info-row strong { font-size: 12px; font-weight: 700; }
+
+    /* ── Footer ── */
+    .report-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border2);
+    }
+
+    .verified {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .view-button {
+      padding: 7px 14px;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      background: rgba(123,63,242,0.12);
+      color: #c585ff;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .view-button:hover {
+      background: rgba(123,63,242,0.25);
+      border-color: var(--purple);
+      color: white;
+    }
+
+    /* ── Empty State ── */
+    .empty-state {
+      display: none;
+      grid-column: 1 / -1;
+      padding: 40px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      border: 1px dashed var(--border2);
+      border-radius: 14px;
+    }
+
+    /* ── Detail Modal Grid ── */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    .detail-box {
+      padding: 12px;
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      background: rgba(9,15,47,0.6);
+    }
+
+    .detail-box small {
+      display: block;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .detail-box strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    /* ── Experienced Button ── */
+    .experienced-button {
+      width: 100%;
+      padding: 13px;
+      margin-bottom: 10px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #7040ff, #a42cff);
+      color: white;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .experienced-button:hover:not(:disabled) {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
+
+    .experienced-button.confirmed,
+    .experienced-button:disabled {
+      background: rgba(123,63,242,0.2);
+      color: var(--muted);
+      cursor: default;
+    }
+
+    /* ── Form Grid inside Modal ── */
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .detail-grid { grid-template-columns: 1fr; }
+      .reports-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="sr-page">
+
+    <header class="sr-topbar">
+      <a href="index.html" class="sr-brand">
+        <div class="sr-brand-mark">S</div>
+        <div>
+          <strong>SafeReach</strong>
+          <small>Your Safety, Our Priority</small>
+        </div>
+      </a>
+
+      <a href="index.html" class="sr-back-btn">← Back to Dashboard</a>
+    </header>
+
+    <section class="sr-section-heading">
+      <div>
+        <h1>Community Safety Reports</h1>
+        <p>View safety updates shared by the SafeReach community around Coimbatore.</p>
+      </div>
+
+      <button class="sr-btn sr-btn-primary" id="openReportModal">+ Report an Issue</button>
+    </section>
+
+    <div class="sr-info-banner">
+      Reports are shown for project demonstration. In a real application, reports would be verified before being shown publicly.
+    </div>
+
+    <section class="filter-bar">
+      <button class="filter-button active" data-filter="all">All Reports</button>
+      <button class="filter-button" data-filter="caution">Caution</button>
+      <button class="filter-button" data-filter="safe">Safe</button>
+      <button class="filter-button" data-filter="resolved">Resolved</button>
+    </section>
+
+    <section class="reports-grid" id="reportsGrid">
+
+      <article class="report-card" data-status="caution">
+        <div class="report-top">
+          <div class="report-title">
+            <div class="report-icon">!</div>
+            <div>
+              <h2>Poor Street Lighting</h2>
+              <p>Race Course Road, Coimbatore</p>
+            </div>
+          </div>
+
+          <span class="sr-badge sr-badge-orange">CAUTION</span>
+        </div>
+
+        <p class="report-description">
+          Street lights near one section of the road are not functioning properly after 9 PM.
+        </p>
+
+        <div class="report-info">
+          <div class="info-row">
+            <span>Reported</span>
+            <strong>Today, 6:20 PM</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Community confirmations</span>
+            <strong>12</strong>
+          </div>
+        </div>
+
+        <div class="report-footer">
+          <span class="verified">Community verified</span>
+          <button class="view-button"
+            data-title="Poor Street Lighting"
+            data-location="Race Course Road, Coimbatore"
+            data-status="Caution"
+            data-time="Today, 6:20 PM"
+            data-confirmations="12"
+            data-description="Street lights near one section of the road are not functioning properly after 9 PM.">
+            View Details
+          </button>
+        </div>
+      </article>
+
+      <article class="report-card" data-status="safe">
+        <div class="report-top">
+          <div class="report-title">
+            <div class="report-icon">✓</div>
+            <div>
+              <h2>Well-Lit Main Route</h2>
+              <p>Gandhipuram Main Road</p>
+            </div>
+          </div>
+
+          <span class="sr-badge sr-badge-green">SAFE</span>
+        </div>
+
+        <p class="report-description">
+          Main road is well lit, has regular public movement, and is recommended for evening travel.
+        </p>
+
+        <div class="report-info">
+          <div class="info-row">
+            <span>Reported</span>
+            <strong>Yesterday, 8:10 PM</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Community confirmations</span>
+            <strong>18</strong>
+          </div>
+        </div>
+
+        <div class="report-footer">
+          <span class="verified">Community verified</span>
+          <button class="view-button"
+            data-title="Well-Lit Main Route"
+            data-location="Gandhipuram Main Road"
+            data-status="Safe"
+            data-time="Yesterday, 8:10 PM"
+            data-confirmations="18"
+            data-description="Main road is well lit, has regular public movement, and is recommended for evening travel.">
+            View Details
+          </button>
+        </div>
+      </article>
+
+      <article class="report-card" data-status="resolved">
+        <div class="report-top">
+          <div class="report-title">
+            <div class="report-icon">R</div>
+            <div>
+              <h2>Road Obstruction Cleared</h2>
+              <p>Avinashi Road Junction</p>
+            </div>
+          </div>
+
+          <span class="sr-badge sr-badge-blue">RESOLVED</span>
+        </div>
+
+        <p class="report-description">
+          A temporary road obstruction reported earlier has been cleared and traffic movement is normal.
+        </p>
+
+        <div class="report-info">
+          <div class="info-row">
+            <span>Updated</span>
+            <strong>Yesterday, 5:40 PM</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Community confirmations</span>
+            <strong>9</strong>
+          </div>
+        </div>
+
+        <div class="report-footer">
+          <span class="verified">Resolved by community update</span>
+          <button class="view-button"
+            data-title="Road Obstruction Cleared"
+            data-location="Avinashi Road Junction"
+            data-status="Resolved"
+            data-time="Yesterday, 5:40 PM"
+            data-confirmations="9"
+            data-description="A temporary road obstruction reported earlier has been cleared and traffic movement is normal.">
+            View Details
+          </button>
+        </div>
+      </article>
+
+      <article class="report-card" data-status="caution">
+        <div class="report-top">
+          <div class="report-title">
+            <div class="report-icon">!</div>
+            <div>
+              <h2>Low Visibility Area</h2>
+              <p>Near Vilankurichi Road</p>
+            </div>
+          </div>
+
+          <span class="sr-badge sr-badge-orange">CAUTION</span>
+        </div>
+
+        <p class="report-description">
+          Reduced visibility due to construction work near the roadside. Use the main road after dark.
+        </p>
+
+        <div class="report-info">
+          <div class="info-row">
+            <span>Reported</span>
+            <strong>18 June 2026, 7:05 PM</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Community confirmations</span>
+            <strong>7</strong>
+          </div>
+        </div>
+
+        <div class="report-footer">
+          <span class="verified">Awaiting more confirmations</span>
+          <button class="view-button"
+            data-title="Low Visibility Area"
+            data-location="Near Vilankurichi Road"
+            data-status="Caution"
+            data-time="18 June 2026, 7:05 PM"
+            data-confirmations="7"
+            data-description="Reduced visibility due to construction work near the roadside. Use the main road after dark.">
+            View Details
+          </button>
+        </div>
+      </article>
+
+      <div class="empty-state" id="emptyState">
+        No reports are available for this filter.
+      </div>
+    </section>
+  </div>
+
+  <div class="sr-modal-overlay" id="reportModal">
+    <div class="sr-modal">
+      <h2>Report a Safety Issue</h2>
+      <p>Share a useful safety update for other SafeReach users.</p>
+
+      <form id="reportForm">
+        <div class="form-grid">
+          <label class="sr-label">
+            Issue Type
+            <select id="issueType" class="sr-select" required>
+              <option value="">Select issue type</option>
+              <option>Poor Street Lighting</option>
+              <option>Unsafe Road Condition</option>
+              <option>Suspicious Activity</option>
+              <option>Accident / Traffic Issue</option>
+              <option>Low Visibility Area</option>
+              <option>Safe Route Update</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+
+          <label id="otherIssueLabel" class="sr-label" style="display: none;">
+            Other Issue Type
+            <input
+              type="text"
+              id="otherIssueType"
+              class="sr-input"
+              placeholder="Enter the issue type"
+            >
+          </label>
+
+          <label class="sr-label">
+            Location
+            <input type="text" id="issueLocation" class="sr-input" placeholder="Example: Race Course Road, Coimbatore" required>
+          </label>
+
+          <label class="sr-label">
+            Description
+            <textarea id="issueDescription" class="sr-textarea" placeholder="Briefly describe the safety issue..." required></textarea>
+          </label>
+        </div>
+
+        <div class="sr-modal-actions">
+          <button type="button" class="sr-btn sr-btn-ghost" id="closeReportModal">Cancel</button>
+          <button type="submit" class="sr-btn sr-btn-primary">Submit Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="sr-modal-overlay" id="detailsModal">
+    <div class="sr-modal">
+      <h2 id="detailTitle">Report Details</h2>
+      <p id="detailDescription"></p>
+
+      <div class="detail-grid">
+        <div class="detail-box">
+          <small>Location</small>
+          <strong id="detailLocation"></strong>
+        </div>
+
+        <div class="detail-box">
+          <small>Status</small>
+          <strong id="detailStatus"></strong>
+        </div>
+
+        <div class="detail-box">
+          <small>Reported / Updated</small>
+          <strong id="detailTime"></strong>
+        </div>
+
+        <div class="detail-box">
+          <small>Community Confirmations</small>
+          <strong id="detailConfirmations"></strong>
+        </div>
+      </div>
+
+      <button class="experienced-button" id="experiencedButton">
+        I Experienced This Too
+      </button>
+
+      <button class="sr-btn sr-btn-ghost sr-btn-full" id="closeDetailsModal">Close Details</button>
+    </div>
+  </div>
+
+  <div class="sr-toast" id="toast"></div>
+
+  <script>
+    // Auth Guard
+    if (!localStorage.getItem('safeReachName')) window.location.href = 'welcome.html';
+
+    const filterButtons = document.querySelectorAll(".filter-button");
+    const reportsGrid = document.getElementById("reportsGrid");
+    const emptyState = document.getElementById("emptyState");
+
+    const reportModal = document.getElementById("reportModal");
+    const detailsModal = document.getElementById("detailsModal");
+    const openReportModal = document.getElementById("openReportModal");
+    const closeReportModal = document.getElementById("closeReportModal");
+    const closeDetailsModal = document.getElementById("closeDetailsModal");
+    const reportForm = document.getElementById("reportForm");
+
+    const issueType = document.getElementById("issueType");
+    const issueLocation = document.getElementById("issueLocation");
+    const issueDescription = document.getElementById("issueDescription");
+    const otherIssueLabel = document.getElementById("otherIssueLabel");
+    const otherIssueType = document.getElementById("otherIssueType");
+
+    issueType.addEventListener("change", () => {
+      const isOther = issueType.value === "Other";
+
+      otherIssueLabel.style.display = isOther ? "block" : "none";
+      otherIssueType.required = isOther;
+
+      if (!isOther) {
+        otherIssueType.value = "";
+      }
+    });
+
+    const detailTitle = document.getElementById("detailTitle");
+    const detailDescription = document.getElementById("detailDescription");
+    const detailLocation = document.getElementById("detailLocation");
+    const detailStatus = document.getElementById("detailStatus");
+    const detailTime = document.getElementById("detailTime");
+    const detailConfirmations = document.getElementById("detailConfirmations");
+
+    const toast = document.getElementById("toast");
+    // ===============================
+// Community Reports Storage
+// ===============================
+
+let communityReports = JSON.parse(
+  localStorage.getItem("safeReachCommunityReports") || "[]"
+);
+
+function saveCommunityReports() {
+  localStorage.setItem(
+    "safeReachCommunityReports",
+    JSON.stringify(communityReports)
+  );
+}
+    const experiencedButton = document.getElementById("experiencedButton");
+    let activeReportButton = null;
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+
+    function updateEmptyState() {
+      const visibleCards = [...document.querySelectorAll(".report-card")]
+        .filter((card) => !card.classList.contains("hidden"));
+
+      emptyState.style.display = visibleCards.length === 0 ? "block" : "none";
+    }
+
+    filterButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const filter = button.dataset.filter;
+
+        filterButtons.forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+
+        document.querySelectorAll(".report-card").forEach((card) => {
+          card.classList.toggle(
+            "hidden",
+            filter !== "all" && card.dataset.status !== filter
+          );
+        });
+
+        updateEmptyState();
+      });
+    });
+
+    openReportModal.addEventListener("click", () => {
+      reportModal.classList.add("show");
+      issueType.focus();
+    });
+
+    closeReportModal.addEventListener("click", () => {
+      reportModal.classList.remove("show");
+      reportForm.reset();
+    });
+
+    closeDetailsModal.addEventListener("click", () => {
+      detailsModal.classList.remove("show");
+    });
+
+    reportModal.addEventListener("click", (event) => {
+      if (event.target === reportModal) {
+        reportModal.classList.remove("show");
+        reportForm.reset();
+      }
+    });
+
+    detailsModal.addEventListener("click", (event) => {
+      if (event.target === detailsModal) {
+        detailsModal.classList.remove("show");
+      }
+    });
+
+    function addViewButtonEvent(button) {
+      button.addEventListener("click", () => {
+        detailTitle.textContent = button.dataset.title;
+        detailDescription.textContent = button.dataset.description;
+        detailLocation.textContent = button.dataset.location;
+        detailStatus.textContent = button.dataset.status;
+        detailTime.textContent = button.dataset.time;
+        detailConfirmations.textContent = button.dataset.confirmations;
+
+        activeReportButton = button;
+
+        const reportKey = [
+          button.dataset.title,
+          button.dataset.location,
+          button.dataset.time
+        ].join("|");
+
+        const confirmedReports = JSON.parse(
+          localStorage.getItem("safeReachConfirmedReports") || "[]"
+        );
+
+        const alreadyConfirmed = confirmedReports.includes(reportKey);
+
+        experiencedButton.dataset.reportKey = reportKey;
+        experiencedButton.textContent = alreadyConfirmed
+          ? "You Confirmed This Report"
+          : "I Experienced This Too";
+
+        experiencedButton.classList.toggle("confirmed", alreadyConfirmed);
+        experiencedButton.disabled = alreadyConfirmed;
+
+        detailsModal.classList.add("show");
+      });
+    }
+
+    document.querySelectorAll(".view-button").forEach(addViewButtonEvent);
+
+    experiencedButton.addEventListener("click", () => {
+      if (!activeReportButton || experiencedButton.disabled) {
+        return;
+      }
+
+      const reportKey = experiencedButton.dataset.reportKey;
+
+      const confirmedReports = JSON.parse(
+        localStorage.getItem("safeReachConfirmedReports") || "[]"
+      );
+
+      if (confirmedReports.includes(reportKey)) {
+        return;
+      }
+
+      const newCount =
+        Number(activeReportButton.dataset.confirmations || 0) + 1;
+
+      activeReportButton.dataset.confirmations = String(newCount);
+      detailConfirmations.textContent = String(newCount);
+
+      const reportCard = activeReportButton.closest(".report-card");
+      const confirmationCount = reportCard.querySelector(
+        ".info-row:last-child strong"
+      );
+
+      if (confirmationCount) {
+        confirmationCount.textContent = String(newCount);
+      }
+
+      confirmedReports.push(reportKey);
+
+      localStorage.setItem(
+        "safeReachConfirmedReports",
+        JSON.stringify(confirmedReports)
+      );
+
+      experiencedButton.textContent = "You Confirmed This Report";
+      experiencedButton.classList.add("confirmed");
+      experiencedButton.disabled = true;
+
+      showToast("Thanks. Your confirmation was added to this report.");
+    });
+
+    reportForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      let type = issueType.value;
+
+      if (type === "Other") {
+        type = otherIssueType.value.trim();
+      }
+
+      const location = issueLocation.value.trim();
+      const description = issueDescription.value.trim();
+
+      if (!type || !location || !description) {
+        return;
+      }
+
+      const status = type === "Safe Route Update" ? "safe" : "caution";
+      
+      const badgeText = status === "safe" ? "SAFE" : "CAUTION";
+      const icon = status === "safe" ? "✓" : "!";
+
+      const card = document.createElement("article");
+      card.className = "report-card";
+      card.dataset.status = status;
+
+      card.innerHTML = `
+        <div class="report-top">
+          <div class="report-title">
+            <div class="report-icon">${icon}</div>
+            <div>
+              <h2>${type}</h2>
+              <p>${location}</p>
+            </div>
+          </div>
+
+          <span class="sr-badge sr-badge-${status === 'safe' ? 'green' : (status === 'resolved' ? 'blue' : 'orange')}">${badgeText}</span>
+        </div>
+
+        <p class="report-description">${description}</p>
+
+        <div class="report-info">
+          <div class="info-row">
+            <span>Reported</span>
+            <strong>Just now</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Community confirmations</span>
+            <strong>0</strong>
+          </div>
+        </div>
+
+        <div class="report-footer">
+          <span class="verified">Awaiting community verification</span>
+          <button class="view-button"
+            data-title="${type}"
+            data-location="${location}"
+            data-status="${status === "safe" ? "Safe" : "Caution"}"
+            data-time="Just now"
+            data-confirmations="0"
+            data-description="${description}">
+            View Details
+          </button>
+        </div>
+      `;
+
+      reportsGrid.insertBefore(card, emptyState);
+      addViewButtonEvent(card.querySelector(".view-button"));
+
+      reportModal.classList.remove("show");
+      reportForm.reset();
+
+      const activeFilter = document.querySelector(".filter-button.active").dataset.filter;
+
+      if (activeFilter !== "all" && activeFilter !== status) {
+        card.classList.add("hidden");
+      }
+
+      updateEmptyState();
+      showToast("Your community safety report was submitted successfully.");
+    });
+
+    function formatSavedReportTime(isoTime) {
+  if (!isoTime) return "Recently";
+
+  const reportDate = new Date(isoTime);
+
+  if (Number.isNaN(reportDate.getTime())) {
+    return "Recently";
+  }
+
+  return reportDate.toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+function escapeHtml(value) {
+  const element = document.createElement("div");
+  element.textContent = value || "";
+  return element.innerHTML;
+}
+
+
+
+function addUnsafeReportFromDashboard() {
+  const savedReportText = localStorage.getItem("safeReachUnsafeReport");
+
+  if (!savedReportText) {
+    return;
+  }
+
+  let savedReport;
+
+  try {
+    savedReport = JSON.parse(savedReportText);
+  } catch (error) {
+    return;
+  }
+
+  if (!savedReport.type) {
+    return;
+  }
+
+  const reportId = savedReport.createdAt || savedReport.type;
+
+  const alreadyShown = document.querySelector(
+    `[data-dashboard-report-id="${CSS.escape(reportId)}"]`
+  );
+
+  if (alreadyShown) {
+    return;
+  }
+
+  const reportTime = formatSavedReportTime(savedReport.createdAt);
+
+  const description = savedReport.description
+    ? savedReport.description
+    : "A community member reported this non-emergency safety concern.";
+
+  const safeType = escapeHtml(savedReport.type);
+  const safeDescription = escapeHtml(description);
+  const safeTime = escapeHtml(reportTime);
+
+  const card = document.createElement("article");
+  card.className = "report-card";
+  card.dataset.status = "caution";
+  card.dataset.dashboardReportId = reportId;
+
+  card.innerHTML = `
+    <div class="report-top">
+      <div class="report-title">
+        <div class="report-icon">!</div>
+        <div>
+          <h2>${safeType}</h2>
+          <p>Location shared privately</p>
+        </div>
+      </div>
+
+      <span class="sr-badge sr-badge-orange">CAUTION</span>
+    </div>
+
+    <p class="report-description">${safeDescription}</p>
+
+    <div class="report-info">
+      <div class="info-row">
+        <span>Reported</span>
+        <strong>${safeTime}</strong>
+      </div>
+
+      <div class="info-row">
+        <span>Community confirmations</span>
+        <strong>0</strong>
+      </div>
+    </div>
+
+    <div class="report-footer">
+      <span class="verified">Anonymous community report</span>
+
+      <button class="view-button"
+        data-title="${safeType}"
+        data-location="Location shared privately"
+        data-status="Caution"
+        data-time="${safeTime}"
+        data-confirmations="0"
+        data-description="${safeDescription}">
+        View Details
+      </button>
+    </div>
+  `;
+
+  reportsGrid.insertBefore(card, emptyState);
+
+  addViewButtonEvent(card.querySelector(".view-button"));
+
+  const activeFilter = document.querySelector(".filter-button.active").dataset.filter;
+
+  if (activeFilter !== "all" && activeFilter !== "caution") {
+    card.classList.add("hidden");
+  }
+}
+
+addUnsafeReportFromDashboard();
+
+updateEmptyState();
+
+  </script>
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a href="index.html" class="mob-nav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="start-journey.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      Journey
+    </a>
+    <a href="safety-map.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Map
+    </a>
+    <a href="sos.html" class="mob-nav-item mob-nav-sos">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      SOS
+    </a>
+    <a href="settings.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+</body>
+</html>

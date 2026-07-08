@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SafeReach — Set up your profile and start your safe journey tracking experience.">
+  <title>SafeReach | Welcome</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile.css">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .welcome-box {
+      width: min(480px, 100%);
+      padding: 36px 32px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: linear-gradient(145deg, #111846, #080c29);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      animation: sr-fade-in 0.5s ease;
+    }
+
+    .welcome-logo {
+      width: 66px;
+      height: 66px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+      font-weight: 800;
+      color: white;
+      background: linear-gradient(145deg, #b348ff, #5522d6);
+      clip-path: polygon(50% 0%, 95% 18%, 84% 76%, 50% 100%, 16% 76%, 5% 18%);
+    }
+
+    .welcome-title {
+      text-align: center;
+      margin: 0 0 6px;
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .welcome-sub {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0 0 28px;
+      line-height: 1.5;
+    }
+
+    .field-group { margin-top: 18px; }
+
+    .gender-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .gender-card {
+      border: 2px solid var(--border2);
+      border-radius: 14px;
+      padding: 18px 12px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(9, 15, 47, 0.7);
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .gender-card:hover {
+      border-color: var(--purple);
+      background: rgba(143, 44, 255, 0.08);
+    }
+
+    .gender-card.selected {
+      border-color: var(--purple);
+      background: rgba(143, 44, 255, 0.12);
+      box-shadow: 0 0 0 3px rgba(143, 44, 255, 0.2);
+    }
+
+    .gender-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: transparent;
+    }
+    .gender-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .gender-icon-male   { background: transparent; }
+    .gender-icon-female { background: transparent; }
+
+    .gender-card h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .gender-card p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    /* Validation Overlay */
+    .val-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+    }
+
+    .val-overlay.show { display: grid; }
+
+    .val-box {
+      width: min(380px, 100%);
+      padding: 30px;
+      text-align: center;
+      border: 1px solid #5b3a90;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #17134b, #090d2b);
+      box-shadow: 0 0 40px rgba(143, 44, 255, 0.35);
+      animation: sr-modal-in 0.25s ease;
+    }
+
+    .val-icon {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: rgba(237, 49, 86, 0.12);
+      border: 1px solid rgba(237, 49, 86, 0.35);
+    }
+
+    .val-box h2 { margin: 0 0 10px; font-size: 20px; }
+
+    .val-box p {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 480px) {
+      .welcome-box { padding: 28px 20px; }
+      .welcome-title { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="welcome-box">
+  <div class="welcome-logo">S</div>
+  <h1 class="welcome-title">Welcome to SafeReach</h1>
+  <p class="welcome-sub">Your personal safety companion. Set up your profile to get started.</p>
+
+  <div class="field-group">
+    <label class="sr-label" for="name">Full Name</label>
+    <input class="sr-input" type="text" id="name" placeholder="Enter your full name" autocomplete="name">
+  </div>
+
+  <div class="field-group">
+    <label class="sr-label" for="phone">Phone Number</label>
+    <input class="sr-input" type="tel" id="phone" placeholder="10-digit mobile number"
+      maxlength="10" inputmode="numeric"
+      oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
+  </div>
+
+  <div class="field-group">
+    <label class="sr-label">Select Gender</label>
+    <div class="gender-grid">
+      <div class="gender-card" id="maleCard" data-gender="male" onclick="selectGender('male')">
+        <div class="gender-icon gender-icon-male">
+          <img src="assets/avatars/male.png" alt="Male" />
+        </div>
+        <h3>Male</h3>
+        <p>Male profile</p>
+      </div>
+      <div class="gender-card" id="femaleCard" data-gender="female" onclick="selectGender('female')">
+        <div class="gender-icon gender-icon-female">
+          <img src="assets/avatars/female.png" alt="Female" />
+        </div>
+        <h3>Female</h3>
+        <p>Female profile</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="field-group" style="margin-top: 26px; padding-top: 22px; border-top: 1px dashed var(--border2);">
+    <label class="sr-label" style="display:block; margin-bottom:2px;">Trusted Contact</label>
+    <p style="margin: 0 0 12px; color: var(--muted); font-size: 11px; line-height: 1.5;">
+      This person will be notified during SOS alerts, live journeys, and safe arrivals.
+    </p>
+  </div>
+
+  <div class="field-group">
+    <label class="sr-label" for="tcName">Contact Name</label>
+    <input class="sr-input" type="text" id="tcName" placeholder="e.g., Rahul" autocomplete="off">
+  </div>
+
+  <div class="field-group">
+    <label class="sr-label" for="tcPhone">Contact Phone Number</label>
+    <input class="sr-input" type="tel" id="tcPhone" placeholder="10-digit mobile number"
+      maxlength="10" inputmode="numeric"
+      oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
+  </div>
+
+  <div class="field-group">
+    <label class="sr-label" for="tcRelation">Relationship</label>
+    <select class="sr-select" id="tcRelation">
+      <option value="">Select relationship</option>
+      <option>Family</option>
+      <option>Friend</option>
+      <option>Parent</option>
+      <option>Sibling</option>
+      <option>Partner</option>
+      <option>College Contact</option>
+      <option>Colleague</option>
+      <option>Other</option>
+    </select>
+  </div>
+
+  <button class="sr-btn sr-btn-primary sr-btn-full" id="continueBtn" style="margin-top: 28px; padding: 15px; font-size: 15px; border-radius: 12px;">
+    Continue to Dashboard
+  </button>
+</div>
+
+<!-- Validation Overlay -->
+<div class="val-overlay" id="valOverlay" onclick="closeVal(event)">
+  <div class="val-box">
+    <div class="val-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ed3156" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <h2>Incomplete Info</h2>
+    <p id="valMsg"></p>
+    <button class="sr-btn sr-btn-primary" onclick="closeVal()" style="width:100%">Got It</button>
+  </div>
+</div>
+
+<script>
+  // If user already registered, redirect to dashboard
+  if (localStorage.getItem("safeReachName")) {
+    window.location.href = "index.html";
+  }
+
+  let selectedGender = "";
+
+  function selectGender(gender) {
+    selectedGender = gender;
+    document.getElementById("maleCard").classList.toggle("selected", gender === "male");
+    document.getElementById("femaleCard").classList.toggle("selected", gender === "female");
+  }
+
+  function showVal(msg) {
+    document.getElementById("valMsg").textContent = msg;
+    document.getElementById("valOverlay").classList.add("show");
+  }
+
+  function closeVal(e) {
+    if (!e || e.target === document.getElementById("valOverlay")) {
+      document.getElementById("valOverlay").classList.remove("show");
+    }
+  }
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") document.getElementById("valOverlay").classList.remove("show");
+  });
+
+  document.getElementById("continueBtn").addEventListener("click", () => {
+    const name  = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+
+    const tcName     = document.getElementById("tcName").value.trim();
+    const tcPhone    = document.getElementById("tcPhone").value.trim();
+    const tcRelation = document.getElementById("tcRelation").value;
+
+    if (!name)              return showVal("Please enter your full name.");
+    if (name.length < 2)   return showVal("Name must be at least 2 characters.");
+    if (phone.length !== 10) return showVal("Please enter a valid 10-digit phone number.");
+    if (!selectedGender)   return showVal("Please select your gender to continue.");
+
+    if (!tcName || tcName.length < 2) return showVal("Please enter your trusted contact's name.");
+    if (tcPhone.length !== 10)        return showVal("Please enter a valid 10-digit phone number for your trusted contact.");
+    if (!tcRelation)                  return showVal("Please select your relationship with the trusted contact.");
+    if (tcPhone === phone)            return showVal("Trusted contact number must be different from your own phone number.");
+
+    localStorage.setItem("safeReachName",   name);
+    localStorage.setItem("safeReachPhone",  phone);
+    localStorage.setItem("safeReachGender", selectedGender);
+    localStorage.setItem("safeReachSetupDone", "true");
+
+    // Save the trusted contact using the same storage schema as trusted-contacts.html
+    const TC_STORAGE_KEY = "safeReachTrustedContacts";
+    let contacts = [];
+    try { contacts = JSON.parse(localStorage.getItem(TC_STORAGE_KEY) || "[]"); }
+    catch { contacts = []; }
+
+    const newContact = { name: tcName, phone: tcPhone, relationship: tcRelation, primary: true };
+
+    // If this contact (by phone) already exists, update it; otherwise add it as primary
+    const existingIdx = contacts.findIndex(c => c.phone === tcPhone);
+    if (existingIdx !== -1) {
+      contacts[existingIdx] = { ...contacts[existingIdx], ...newContact };
+    } else {
+      contacts.forEach(c => c.primary = false);
+      contacts.unshift(newContact);
+    }
+
+    localStorage.setItem(TC_STORAGE_KEY, JSON.stringify(contacts));
+    localStorage.setItem("safeReachSelectedContacts", JSON.stringify(contacts));
+
+    window.location.href = "index.html";
+  });
+</script>
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a href="index.html" class="mob-nav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="start-journey.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      Journey
+    </a>
+    <a href="safety-map.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Map
+    </a>
+    <a href="sos.html" class="mob-nav-item mob-nav-sos">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      SOS
+    </a>
+    <a href="settings.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+</body>
+</html>

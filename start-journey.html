@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SafeReach — Plan your safe journey with route preview and safety score.">
+  <title>SafeReach | Start Journey</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile.css">
+  <style>
+    .layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* Form Card */
+    .form-card h2 {
+      margin: 0 0 6px;
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    .form-card>.sub {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    /* Steps Indicator */
+    .steps {
+      display: flex;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .step {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      background: #1a2764;
+      color: #8090c0;
+    }
+
+    .step.active {
+      background: linear-gradient(145deg, #7040ff, #a42cff);
+      color: white;
+      box-shadow: 0 0 16px rgba(143, 44, 255, 0.4);
+    }
+
+    .step-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border2);
+      margin: 0 4px;
+    }
+
+    /* Location Button */
+    .location-btn {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(123, 63, 242, 0.1);
+      color: #c585ff;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .location-btn:hover {
+      background: rgba(123, 63, 242, 0.18);
+      border-color: var(--purple);
+    }
+
+    /* Transport Mode */
+    .transport-grid {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .transport {
+      padding: 9px 16px;
+      border: 1px solid var(--border2);
+      border-radius: 9px;
+      background: rgba(9, 15, 47, 0.7);
+      color: var(--muted);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .transport:hover {
+      border-color: var(--purple);
+      color: white;
+    }
+
+    .transport.selected {
+      background: linear-gradient(90deg, rgba(123, 63, 242, 0.4), rgba(168, 85, 247, 0.4));
+      border-color: var(--purple);
+      color: white;
+      box-shadow: 0 0 12px rgba(143, 44, 255, 0.25);
+    }
+
+    .field-row {
+      margin-top: 14px;
+    }
+
+    /* Preview Card */
+    .preview-card {
+      min-height: 500px;
+    }
+
+    .preview-card h2 {
+      margin: 0 0 6px;
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    .preview-card>.sub {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    /* Map Preview */
+    .map-preview {
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #17334a, #111e3d);
+    }
+
+    .map-grid {
+      position: absolute;
+      inset: -30px;
+      opacity: 0.45;
+      background:
+        repeating-linear-gradient(0deg, transparent 0 25px, #ffffff17 26px 27px),
+        repeating-linear-gradient(90deg, transparent 0 32px, #ffffff17 33px 34px);
+      transform: rotate(-8deg);
+    }
+
+    .route-line-preview {
+      position: absolute;
+      top: 51%;
+      left: 18%;
+      width: 65%;
+      height: 4px;
+      background: #2583ff;
+      transform: rotate(-18deg);
+      box-shadow: 0 0 14px #2583ff;
+      border-radius: 2px;
+    }
+
+    .map-pin {
+      position: absolute;
+      width: 28px;
+      height: 36px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+    }
+
+    .map-pin::after {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .pin-start {
+      left: 18%;
+      bottom: 28%;
+      background: #3386ff;
+    }
+
+    .pin-end {
+      right: 17%;
+      top: 25%;
+      background: #f13e61;
+    }
+
+    .map-labels {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .map-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 9px;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+    }
+
+    .label-start {
+      background: rgba(51, 134, 255, 0.25);
+      color: #80c0ff;
+      align-self: flex-start;
+    }
+
+    .label-end {
+      background: rgba(241, 62, 97, 0.25);
+      color: #ff9090;
+      align-self: flex-end;
+    }
+
+    /* Safety Score */
+    .safety-score {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      background: rgba(9, 15, 47, 0.6);
+    }
+
+    .score-ring {
+      width: 60px;
+      height: 60px;
+      display: grid;
+      place-items: center;
+      border: 5px solid #2cd96d;
+      border-left-color: var(--border2);
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .safety-score strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .safety-score small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    /* Route Details */
+    .route-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .detail-box {
+      padding: 12px;
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      background: rgba(9, 15, 47, 0.6);
+    }
+
+    .detail-box small {
+      display: block;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .detail-box strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    /* Trusted Contact Box */
+    .contact-box {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      background: rgba(9, 15, 47, 0.6);
+    }
+
+    .contact-box strong {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .contact-box p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    /* Alert Overlay */
+    .alert-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(4px);
+    }
+
+    .alert-overlay.show {
+      display: grid;
+    }
+
+    .alert-box {
+      width: min(400px, 100%);
+      padding: 28px;
+      text-align: center;
+      border: 1px solid #5b3a90;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #17134b, #090d2b);
+      box-shadow: 0 0 40px rgba(143, 44, 255, 0.35);
+      animation: sr-modal-in 0.25s ease;
+    }
+
+    .alert-icon {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+    }
+
+    .alert-box h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    .alert-box p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .transport-grid {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .route-details {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sr-page sr-fade-in">
+
+    <!-- Topbar -->
+    <header class="sr-topbar">
+      <a href="index.html" class="sr-brand" aria-label="SafeReach Home">
+        <div class="sr-brand-mark">S</div>
+        <div>
+          <strong>SafeReach</strong>
+          <small>Your Safety, Our Priority</small>
+        </div>
+      </a>
+      <a href="index.html" class="sr-back-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round">
+          <path d="M19 12H5M12 5l-7 7 7 7" />
+        </svg>
+        Back to Dashboard
+      </a>
+    </header>
+
+    <!-- Heading -->
+    <section class="sr-section-heading" style="text-align:center; margin-bottom:28px;">
+      <h1>Start a Journey</h1>
+      <p>Plan your route, set expected arrival, and keep trusted contacts informed in real time.</p>
+    </section>
+
+    <!-- Layout -->
+    <section class="layout">
+
+      <!-- Form Card -->
+      <article class="sr-card sr-card-pad form-card">
+        <h2>Journey Details</h2>
+        <p class="sub">Fill in your route and preferences to begin journey tracking.</p>
+
+        <!-- Steps -->
+        <div class="steps">
+          <span class="step active">1</span>
+          <span class="step-line"></span>
+          <span class="step active" id="step2">2</span>
+          <span class="step-line"></span>
+          <span class="step" id="step3">3</span>
+        </div>
+
+        <!-- Current Location -->
+        <div class="field-row">
+          <label class="sr-label">Current Location</label>
+          <button class="location-btn" id="currentLocationBtn" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+            </svg>
+            Use Current Location
+          </button>
+        </div>
+
+        <div class="sr-divider">OR</div>
+
+        <div class="field-row">
+          <label class="sr-label" for="from">From</label>
+          <input class="sr-input" id="from" type="text" list="locationList" autocomplete="off"
+            placeholder="Starting location">
+        </div>
+
+        <div class="field-row">
+          <label class="sr-label" for="to">Destination</label>
+          <input class="sr-input" id="to" type="text" list="locationList" autocomplete="off"
+            placeholder="Where are you going?">
+        </div>
+
+        <datalist id="locationList">
+          <option value="Airport">
+          <option value="Race Course">
+          <option value="Gandhipuram">
+          <option value="Railway Station">
+          <option value="Ukkadam">
+          <option value="Sri Ramakrishna College">
+          <option value="PSG College">
+          <option value="RS Puram">
+          <option value="Saibaba Colony">
+          <option value="Peelamedu">
+          <option value="Singanallur">
+          <option value="Saravanampatti">
+          <option value="Town Hall">
+          <option value="Brookefields">
+          <option value="Fun Republic Mall">
+          <option value="KMCH">
+        </datalist>
+
+        <!-- Transport Mode -->
+        <div class="field-row">
+          <label class="sr-label">Transport Mode</label>
+          <div class="transport-grid" id="transportGrid">
+            <button class="transport selected" data-mode="Walking" type="button">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="5" r="2" />
+                <path d="M12 7v8M8 11l4 2 4-2M10 19l-2 3M14 19l2 3" />
+              </svg>
+              Walking
+            </button>
+            <button class="transport" data-mode="Bike" type="button">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="5" cy="17" r="3" />
+                <circle cx="19" cy="17" r="3" />
+                <path d="M5 17h14M12 4l5 13M9 10l3-6 3 6" />
+              </svg>
+              Bike
+            </button>
+            <button class="transport" data-mode="Car" type="button">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="10" width="22" height="8" rx="2" />
+                <path d="M5 18v3M19 18v3M1 14h22M5 10l2-5h10l2 5" />
+                <circle cx="6" cy="18" r="2" />
+                <circle cx="18" cy="18" r="2" />
+              </svg>
+              Car
+            </button>
+            <button class="transport" data-mode="Bus" type="button">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="14" rx="2" />
+                <path d="M2 11h20M7 18v2M17 18v2M2 8h20" />
+              </svg>
+              Bus
+            </button>
+          </div>
+        </div>
+
+        <!-- Arrival Time + Contact -->
+        <div class="sr-grid-2" style="margin-top:14px; gap:12px;">
+          <div>
+            <label class="sr-label" for="arrival">Expected Arrival</label>
+            <input class="sr-input" id="arrival" type="time">
+          </div>
+          <div>
+            <label class="sr-label" for="contact">Trusted Contact</label>
+            <select class="sr-select" id="contact"></select>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="field-row">
+          <label class="sr-label" for="journeyNotes">Journey Notes (Optional)</label>
+          <textarea class="sr-textarea" id="journeyNotes" rows="3"
+            placeholder="e.g., Going to college for exams..."></textarea>
+        </div>
+
+        <button class="sr-btn sr-btn-primary sr-btn-full" id="startButton"
+          style="margin-top:20px; padding:14px; font-size:14px; border-radius:12px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3" />
+          </svg>
+          Start Safe Journey
+        </button>
+      </article>
+
+      <!-- Preview Card -->
+      <article class="sr-card sr-card-pad preview-card">
+        <h2>Route Safety Preview</h2>
+        <p class="sub" id="routeText">Enter your journey details to see route preview.</p>
+
+        <div class="map-preview">
+          <div class="map-grid"></div>
+          <div class="route-line-preview"></div>
+          <div class="map-pin pin-start"></div>
+          <div class="map-pin pin-end"></div>
+          <div class="map-labels">
+            <span class="map-label label-start" id="labelFrom">Start Point</span>
+            <span class="map-label label-end" id="labelTo">Destination</span>
+          </div>
+        </div>
+
+        <div class="safety-score">
+          <div class="score-ring" id="safetyScore">82</div>
+          <div>
+            <strong id="scoreLabel">Good Route</strong>
+            <small id="scoreDesc">Well-lit roads and verified safe zones along this route.</small>
+          </div>
+        </div>
+
+        <div class="route-details">
+          <div class="detail-box">
+            <small>Estimated Distance</small>
+            <strong id="previewDistance">— km</strong>
+          </div>
+          <div class="detail-box">
+            <small>Estimated Time</small>
+            <strong id="previewTime">— mins</strong>
+          </div>
+        </div>
+
+        <!-- Trusted Contact Preview -->
+        <div class="contact-box" id="contactPreview" style="display:none;">
+          <strong id="contactName">—</strong>
+          <p id="contactRelation">Will be notified when your journey starts.</p>
+        </div>
+      </article>
+
+    </section>
+  </div>
+
+  <!-- Alert Modal -->
+  <div class="alert-overlay" id="alertOverlay" onclick="closeAlert(event)">
+    <div class="alert-box">
+      <div class="alert-icon" style="background:rgba(237,49,86,0.12); border:1px solid rgba(237,49,86,0.35);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ed3156" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      </div>
+      <h2>Missing Details</h2>
+      <p id="alertMsg"></p>
+      <button class="sr-btn sr-btn-primary" onclick="closeAlert()" style="width:100%">Got It</button>
+    </div>
+  </div>
+
+  <script>
+    // ── Auth Guard ──
+    if (!localStorage.getItem("safeReachName")) window.location.href = "welcome.html";
+
+    // ── Location Data (Coimbatore) ──
+    const locations = {
+      "Airport": [11.0290, 77.0434],
+      "Race Course": [11.0025, 76.9725],
+      "Gandhipuram": [11.0170, 76.9670],
+      "Railway Station": [11.0055, 76.9661],
+      "Ukkadam": [10.9920, 76.9580],
+      "Sri Ramakrishna College": [11.0832, 76.9788],
+      "PSG College": [11.0247, 76.9445],
+      "RS Puram": [11.0086, 76.9513],
+      "Saibaba Colony": [11.0285, 76.9383],
+      "Peelamedu": [11.0301, 76.9984],
+      "Singanallur": [11.0005, 77.0276],
+      "Saravanampatti": [11.0820, 76.9950],
+      "Town Hall": [10.9980, 76.9618],
+      "Brookefields": [11.0187, 76.9658],
+      "Fun Republic Mall": [11.0278, 77.0019],
+      "KMCH": [11.0309, 77.0407]
+    };
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // ── Transport Mode ──
+    let selectedMode = "Walking";
+    const speedMap = { Walking: 4.5, Bike: 18, Car: 28, Bus: 16 };
+
+    document.getElementById("transportGrid").addEventListener("click", e => {
+      const btn = e.target.closest(".transport");
+      if (!btn) return;
+      document.querySelectorAll(".transport").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      selectedMode = btn.dataset.mode;
+      updatePreview();
+    });
+
+    // ── Route Preview ──
+    const fromInput = document.getElementById("from");
+    const toInput = document.getElementById("to");
+
+    function updatePreview() {
+      const f = fromInput.value.trim(), t = toInput.value.trim();
+      document.getElementById("labelFrom").textContent = f || "Start Point";
+      document.getElementById("labelTo").textContent = t || "Destination";
+
+      if (!f && !t) {
+        document.getElementById("routeText").textContent = "Enter your journey details to see route preview.";
+        document.getElementById("previewDistance").textContent = "— km";
+        document.getElementById("previewTime").textContent = "— mins";
+        return;
+      }
+
+      document.getElementById("routeText").textContent = f && t ? `${f} → ${t}` : (f || t);
+
+      const fL = locations[f], tL = locations[t];
+      let dist = 0;
+      if (fL && tL) {
+        dist = haversine(fL[0], fL[1], tL[0], tL[1]);
+      } else if (f && t) {
+        dist = 2.0 + ((f.length + t.length) % 41) / 10.0;
+      }
+
+      if (dist > 0) {
+        const spd = speedMap[selectedMode] || 4.5;
+        const mins = Math.round((dist / spd) * 60);
+        document.getElementById("previewDistance").textContent = dist.toFixed(1) + " km";
+        document.getElementById("previewTime").textContent = mins + " mins";
+
+        // Dynamic score (82–96 based on distance)
+        const score = Math.max(72, Math.min(96, 96 - Math.floor(dist * 1.5)));
+        document.getElementById("safetyScore").textContent = score;
+        document.getElementById("scoreLabel").textContent = score >= 85 ? "Excellent Route" : score >= 75 ? "Good Route" : "Use Caution";
+        document.getElementById("scoreDesc").textContent = score >= 85
+          ? "Well-lit and highly verified safe route with minimal risk zones."
+          : score >= 75
+            ? "Generally safe route with some unverified areas. Stay alert."
+            : "Some high-risk areas detected. Share your location with contacts.";
+        document.getElementById("safetyScore").style.borderColor = score >= 85 ? "#2cd96d" : score >= 75 ? "#ffbe3d" : "#ed3156";
+      } else {
+        document.getElementById("previewDistance").textContent = "—";
+        document.getElementById("previewTime").textContent = "—";
+      }
+    }
+
+    fromInput.addEventListener("input", updatePreview);
+    toInput.addEventListener("input", updatePreview);
+
+    // ── Load Trusted Contacts ──
+    const contactSelect = document.getElementById("contact");
+
+    function loadContacts() {
+      const contacts = JSON.parse(localStorage.getItem("safeReachSelectedContacts") || "[]");
+      contactSelect.innerHTML = "";
+      if (contacts.length === 0) {
+        contactSelect.innerHTML = '<option value="">No Trusted Contacts — Add in Contacts</option>';
+      } else {
+        contacts.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c.name;
+          opt.textContent = `${c.name} — ${c.relationship}`;
+          contactSelect.appendChild(opt);
+        });
+        updateContactPreview();
+      }
+    }
+
+    contactSelect.addEventListener("change", updateContactPreview);
+
+    function updateContactPreview() {
+      const contacts = JSON.parse(localStorage.getItem("safeReachSelectedContacts") || "[]");
+      const selected = contacts.find(c => c.name === contactSelect.value);
+      if (selected) {
+        document.getElementById("contactName").textContent = selected.name + " · " + selected.relationship;
+        document.getElementById("contactRelation").textContent = selected.phone ? selected.phone + " · Will be notified when journey starts." : "Will be notified when journey starts.";
+        document.getElementById("contactPreview").style.display = "block";
+      } else {
+        document.getElementById("contactPreview").style.display = "none";
+      }
+    }
+
+    // ── Current Location ──
+    const svgLocIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
+
+    document.getElementById("currentLocationBtn").addEventListener("click", () => {
+      const btn = document.getElementById("currentLocationBtn");
+
+      // Chrome blocks geolocation on file:// protocol — show helpful message immediately
+      if (window.location.protocol === "file:") {
+        showAlert("Location access is blocked when the page is opened as a local file.\n\nTo enable GPS, open the app through a local server (e.g. use Live Server in VS Code, then visit http://localhost:5500).\n\nFor now, please type your starting location in the 'From' field below.");
+        return;
+      }
+
+      if (!navigator.geolocation) {
+        showAlert("Geolocation is not supported by your browser.");
+        return;
+      }
+
+      btn.innerHTML = "⏳ Detecting location…";
+      btn.disabled = true;
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          btn.innerHTML = "✅ Location detected";
+          btn.disabled = false;
+          fromInput.value = "Current Location";
+          localStorage.setItem("safeReachCurrentLat", pos.coords.latitude);
+          localStorage.setItem("safeReachCurrentLng", pos.coords.longitude);
+          updatePreview();
+        },
+        err => {
+          btn.innerHTML = svgLocIcon + " Use Current Location";
+          btn.disabled = false;
+          const msgs = {
+            1: "Location permission denied. Please allow location access in your browser settings and try again.",
+            2: "Unable to determine your location. Please enter it manually in the 'From' field.",
+            3: "Location request timed out. Please enter your location manually."
+          };
+          showAlert(msgs[err.code] || "Could not detect location. Please enter it manually.");
+        },
+        { timeout: 10000, maximumAge: 60000, enableHighAccuracy: true }
+      );
+    });
+
+    // ── Alert Modal ──
+    function showAlert(msg) {
+      document.getElementById("alertMsg").textContent = msg;
+      document.getElementById("alertOverlay").classList.add("show");
+    }
+
+    function closeAlert(e) {
+      if (!e || e.target === document.getElementById("alertOverlay")) {
+        document.getElementById("alertOverlay").classList.remove("show");
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") document.getElementById("alertOverlay").classList.remove("show");
+    });
+
+    // ── Start Journey ──
+    document.getElementById("startButton").addEventListener("click", () => {
+      const from = fromInput.value.trim();
+      const to = toInput.value.trim();
+      const arrival = document.getElementById("arrival").value;
+
+      if (!from) return showAlert("Please enter a starting location.");
+      if (!to) return showAlert("Please enter a destination.");
+      if (!arrival) return showAlert("Please select the expected arrival time.");
+
+      const contacts = JSON.parse(localStorage.getItem("safeReachSelectedContacts") || "[]");
+      if (contacts.length === 0) return showAlert("Please add a trusted contact first. Go to Trusted Contacts page.");
+
+      if (contactSelect.value === "" || contactSelect.value === "No Trusted Contacts — Add in Contacts") {
+        return showAlert("Please select a trusted contact to notify during your journey.");
+      }
+
+      const fL = locations[from], tL = locations[to];
+      let distance = 0, travelMins = 0;
+      if (fL && tL) {
+        distance = haversine(fL[0], fL[1], tL[0], tL[1]);
+      } else if (from && to) {
+        distance = 2.0 + ((from.length + to.length) % 41) / 10.0;
+      }
+      if (distance > 0) {
+        const spd = speedMap[selectedMode] || 4.5;
+        travelMins = Math.round((distance / spd) * 60);
+      }
+
+      // Save journey data
+      localStorage.setItem("safeReachJourneyFrom", from);
+      localStorage.setItem("safeReachJourneyTo", to);
+      localStorage.setItem("safeReachJourneyDistance", distance > 0 ? distance.toFixed(1) + " km" : "—");
+      localStorage.setItem("safeReachJourneyTime", travelMins > 0 ? travelMins + " mins" : "—");
+      localStorage.setItem("safeReachJourneyMode", selectedMode);
+      localStorage.setItem("safeReachArrival", arrival);
+      localStorage.setItem("safeReachJourneyActive", "true");
+      localStorage.setItem("safeReachDestination", to);
+      localStorage.setItem("safeReachSecondsLeft", travelMins > 0 ? travelMins * 60 : 1500);
+      localStorage.setItem("safeReachNotes", document.getElementById("journeyNotes").value.trim());
+
+      const selContact = contacts.find(c => c.name === contactSelect.value);
+      if (selContact) localStorage.setItem("safeReachCurrentContact", JSON.stringify(selContact));
+
+      window.location.href = "active-journey.html";
+    });
+
+    // ── Init ──
+    loadContacts();
+    updatePreview();
+  </script>
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a href="index.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="start-journey.html" class="mob-nav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      Journey
+    </a>
+    <a href="safety-map.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Map
+    </a>
+    <a href="sos.html" class="mob-nav-item mob-nav-sos">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      SOS
+    </a>
+    <a href="settings.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+</body>
+
+</html>

@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SafeReach — Manage your trusted emergency contacts.">
+  <title>SafeReach | Trusted Contacts</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile.css">
+  <style>
+    .page-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    /* Info Banner */
+    .info-banner {
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      border: 1px solid #315084;
+      border-radius: 12px;
+      color: #cfe4ff;
+      font-size: 12px;
+      line-height: 1.6;
+      background: rgba(11, 29, 67, 0.7);
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    /* Grid */
+    .contacts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    /* Contact Card */
+    .contact-card {
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(145deg, #111846, #080c29);
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.28);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .contact-card:hover { border-color: #3a5090; }
+
+    .contact-card.primary {
+      border-color: #3acb70;
+      box-shadow: 0 0 0 1px rgba(58, 203, 112, 0.18), 0 14px 35px rgba(0, 0, 0, 0.28);
+    }
+
+    .contact-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .c-avatar {
+      width: 50px;
+      height: 50px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .c-avatar.pink   { background: linear-gradient(145deg, #ff7394, #7039e4); }
+    .c-avatar.blue   { background: linear-gradient(145deg, #4aabff, #3156d8); }
+    .c-avatar.green  { background: linear-gradient(145deg, #39d979, #118d50); }
+    .c-avatar.orange { background: linear-gradient(145deg, #ffb347, #e06000); }
+    .c-avatar.purple { background: linear-gradient(145deg, #c070ff, #6020cc); }
+
+    .c-name { min-width: 0; flex: 1; }
+    .c-name h2 { margin: 0; font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .c-name p  { margin: 3px 0 0; color: var(--muted); font-size: 10px; }
+
+    .primary-badge {
+      padding: 4px 8px;
+      border-radius: 20px;
+      color: #baffcb;
+      font-size: 9px;
+      font-weight: 800;
+      background: #0e3522;
+      border: 1px solid #1e6040;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .contact-details {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 12px;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      background: rgba(9, 15, 47, 0.6);
+      font-size: 11px;
+    }
+
+    .detail-row span   { color: var(--muted); font-weight: 600; }
+    .detail-row strong { color: white; font-weight: 700; }
+
+    .alert-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .alert-tag {
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(143, 44, 255, 0.12);
+      color: #c580ff;
+      border: 1px solid rgba(143, 44, 255, 0.25);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 9px 8px;
+      border-radius: 9px;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-edit {
+      border: 1px solid var(--border);
+      background: rgba(9, 15, 47, 0.6);
+      color: var(--muted);
+    }
+    .action-edit:hover { color: white; border-color: var(--purple); }
+
+    .action-primary {
+      border: 1px solid #2a6040;
+      background: rgba(14, 53, 34, 0.5);
+      color: #5eff92;
+    }
+    .action-primary.is-primary {
+      background: rgba(14, 53, 34, 0.8);
+      color: #baffcb;
+    }
+    .action-primary:hover { background: rgba(14, 53, 34, 0.9); }
+
+    .action-remove {
+      border: 1px solid rgba(237, 49, 86, 0.35);
+      background: rgba(60, 12, 22, 0.5);
+      color: #ff7090;
+    }
+    .action-remove:hover { background: rgba(80, 15, 30, 0.8); }
+
+    /* Empty State */
+    .empty-state {
+      display: none;
+      grid-column: 1 / -1;
+      padding: 48px 24px;
+      text-align: center;
+      border: 1px dashed var(--border2);
+      border-radius: 16px;
+      color: var(--muted);
+    }
+
+    .empty-icon {
+      width: 56px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: rgba(143, 44, 255, 0.1);
+      border: 1px solid rgba(143, 44, 255, 0.25);
+    }
+
+    .empty-state p { margin: 0 0 18px; font-size: 13px; }
+
+    /* Form Grid in Modal */
+    .form-grid { display: grid; gap: 14px; }
+
+    @media (max-width: 700px) {
+      .contacts-grid { grid-template-columns: 1fr; }
+      .page-head { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+<div class="sr-page sr-fade-in">
+
+  <!-- Topbar -->
+  <header class="sr-topbar">
+    <a href="index.html" class="sr-brand" aria-label="SafeReach Home">
+      <div class="sr-brand-mark">S</div>
+      <div>
+        <strong>SafeReach</strong>
+        <small>Your Safety, Our Priority</small>
+      </div>
+    </a>
+    <a href="index.html" class="sr-back-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back to Dashboard
+    </a>
+  </header>
+
+  <!-- Page Head -->
+  <div class="page-head">
+    <div>
+      <h1 style="margin:0; font-size:28px; font-weight:800;">Trusted Contacts</h1>
+      <p style="margin:7px 0 0; color:var(--muted); font-size:13px; line-height:1.5;">
+        These contacts will be notified during emergencies, live journeys, and safe arrivals.
+      </p>
+    </div>
+    <button class="sr-btn sr-btn-primary" id="openAddModal" style="white-space:nowrap; flex-shrink:0;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Contact
+    </button>
+  </div>
+
+  <!-- Info Banner -->
+  <div class="info-banner">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#75bcff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span>Your primary contact will receive real-time location updates, SOS alerts, and safe arrival notifications during every journey. Contacts are stored locally in your browser.</span>
+  </div>
+
+  <!-- Contacts Grid -->
+  <section class="contacts-grid" id="contactsGrid">
+    <!-- Dynamically populated -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8f2cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/><line x1="19" y1="11" x2="19" y2="17"/><line x1="16" y1="14" x2="22" y2="14"/></svg>
+      </div>
+      <p>No trusted contacts yet. Add a contact to get started with journey safety.</p>
+      <button class="sr-btn sr-btn-primary" onclick="document.getElementById('openAddModal').click()">Add First Contact</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- Add/Edit Contact Modal -->
+<div class="sr-modal-overlay" id="addModal" onclick="closeAddIfOverlay(event)">
+  <div class="sr-modal">
+    <h2 id="modalTitle">Add Trusted Contact</h2>
+    <p>This contact will receive safety alerts and live location updates during your journeys.</p>
+
+    <form id="contactForm">
+      <div class="form-grid">
+        <div>
+          <label class="sr-label" for="contactName">Contact Name</label>
+          <input class="sr-input" type="text" id="contactName" placeholder="e.g., Rahul" required>
+        </div>
+        <div>
+          <label class="sr-label" for="contactPhone">Phone Number</label>
+          <input class="sr-input" type="tel" id="contactPhone" placeholder="10-digit mobile number"
+            maxlength="10" inputmode="numeric" required>
+          <p id="phoneError" style="margin:5px 0 0; color:#ff7090; font-size:10px; display:none;">Please enter exactly 10 digits.</p>
+        </div>
+        <div>
+          <label class="sr-label" for="contactRelation">Relationship</label>
+          <select class="sr-select" id="contactRelation" required>
+            <option value="">Select relationship</option>
+            <option>Family</option>
+            <option>Friend</option>
+            <option>Parent</option>
+            <option>Sibling</option>
+            <option>Partner</option>
+            <option>College Contact</option>
+            <option>Colleague</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sr-modal-actions">
+        <button type="button" class="sr-btn sr-btn-ghost" id="closeAddModal">Cancel</button>
+        <button type="submit" class="sr-btn sr-btn-primary" id="saveContactBtn">Add Contact</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="sr-modal-overlay" id="deleteModal">
+  <div class="sr-modal">
+    <h2>Remove Contact</h2>
+    <p id="deleteMessage">Are you sure you want to remove this contact?</p>
+    <div class="sr-modal-actions">
+      <button class="sr-btn sr-btn-ghost" id="cancelDelete">Cancel</button>
+      <button class="sr-btn sr-btn-danger" id="confirmDelete">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="sr-toast" id="toast"></div>
+
+<script>
+  // ── Auth Guard ──
+  if (!localStorage.getItem("safeReachName")) window.location.href = "welcome.html";
+
+  const STORAGE_KEY = "safeReachTrustedContacts";
+  const avatarColors = ["pink", "blue", "green", "orange", "purple"];
+
+  let editingCard = null;
+  let cardToDelete = null;
+
+  // ── Toast ──
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3200);
+  }
+
+  // ── Storage ──
+  function getContacts() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+    catch { return []; }
+  }
+
+  function persistContacts(contacts) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
+    // Update selectedContacts for journey form
+    const primary = contacts.find(c => c.primary) || contacts[0];
+    if (primary) localStorage.setItem("safeReachSelectedContacts", JSON.stringify(contacts));
+    else localStorage.removeItem("safeReachSelectedContacts");
+  }
+
+  // ── Render ──
+  function renderContacts() {
+    const contacts = getContacts();
+    const grid = document.getElementById("contactsGrid");
+    const empty = document.getElementById("emptyState");
+
+    // Clear existing cards
+    grid.querySelectorAll(".contact-card").forEach(c => c.remove());
+
+    if (contacts.length === 0) {
+      empty.style.display = "block";
+      return;
+    }
+
+    empty.style.display = "none";
+
+    contacts.forEach((c, i) => {
+      const card = buildCard(c, i);
+      grid.appendChild(card);
+    });
+  }
+
+  function buildCard(c, idx) {
+    const article = document.createElement("article");
+    article.className = "contact-card" + (c.primary ? " primary" : "");
+    article.dataset.idx = idx;
+
+    const colorClass = avatarColors[idx % avatarColors.length];
+    const letter = c.name.charAt(0).toUpperCase();
+
+    article.innerHTML = `
+      <div class="contact-top">
+        <div class="c-avatar ${colorClass}">${letter}</div>
+        <div class="c-name">
+          <h2>${escHtml(c.name)}</h2>
+          <p>${escHtml(c.relationship)} · Trusted Contact</p>
+        </div>
+        ${c.primary ? '<span class="primary-badge">PRIMARY</span>' : ""}
+      </div>
+
+      <div class="contact-details">
+        <div class="detail-row">
+          <span>Phone</span>
+          <strong>${formatPhone(c.phone)}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Relationship</span>
+          <strong>${escHtml(c.relationship)}</strong>
+        </div>
+      </div>
+
+      <div class="alert-tags">
+        <span class="alert-tag">Live Location</span>
+        <span class="alert-tag">SOS Alert</span>
+        <span class="alert-tag">Safe Arrival</span>
+      </div>
+
+      <div class="card-actions">
+        <button class="action-btn action-edit btn-edit">Edit</button>
+        <button class="action-btn action-primary btn-primary ${c.primary ? "is-primary" : ""}">
+          ${c.primary ? "Primary" : "Make Primary"}
+        </button>
+        <button class="action-btn action-remove btn-remove">Remove</button>
+      </div>
+    `;
+
+    // Events
+    article.querySelector(".btn-edit").addEventListener("click", () => openEdit(c, idx, article));
+    article.querySelector(".btn-primary").addEventListener("click", () => setPrimary(idx));
+    article.querySelector(".btn-remove").addEventListener("click", () => openDelete(c.name, article));
+
+    return article;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  }
+
+  function formatPhone(p) {
+    const s = String(p).replace(/\D/g, "");
+    return s.length === 10 ? `${s.slice(0,5)} ${s.slice(5)}` : p;
+  }
+
+  // ── Add Modal ──
+  document.getElementById("openAddModal").addEventListener("click", openAdd);
+
+  function openAdd() {
+    editingCard = null;
+    document.getElementById("modalTitle").textContent = "Add Trusted Contact";
+    document.getElementById("saveContactBtn").textContent = "Add Contact";
+    document.getElementById("contactForm").reset();
+    document.getElementById("phoneError").style.display = "none";
+    document.getElementById("addModal").classList.add("open");
+    document.getElementById("contactName").focus();
+  }
+
+  function openEdit(c, idx, card) {
+    editingCard = { c, idx, card };
+    document.getElementById("modalTitle").textContent = "Edit Contact";
+    document.getElementById("saveContactBtn").textContent = "Save Changes";
+    document.getElementById("contactName").value = c.name;
+    document.getElementById("contactPhone").value = c.phone;
+    document.getElementById("contactRelation").value = c.relationship;
+    document.getElementById("phoneError").style.display = "none";
+    document.getElementById("addModal").classList.add("open");
+    document.getElementById("contactName").focus();
+  }
+
+  document.getElementById("closeAddModal").addEventListener("click", () => {
+    document.getElementById("addModal").classList.remove("open");
+  });
+
+  function closeAddIfOverlay(e) {
+    if (e.target === document.getElementById("addModal")) {
+      document.getElementById("addModal").classList.remove("open");
+    }
+  }
+
+  // Phone input sanitize
+  document.getElementById("contactPhone").addEventListener("input", function () {
+    this.value = this.value.replace(/\D/g, "").slice(0, 10);
+    if (this.value.length === 10 || this.value.length === 0) {
+      document.getElementById("phoneError").style.display = "none";
+    }
+  });
+
+  // ── Form Submit ──
+  document.getElementById("contactForm").addEventListener("submit", e => {
+    e.preventDefault();
+
+    const name     = document.getElementById("contactName").value.trim();
+    const phone    = document.getElementById("contactPhone").value.trim();
+    const relation = document.getElementById("contactRelation").value;
+
+    if (!name || name.length < 2) return showToast("Please enter a valid contact name.");
+    if (phone.length !== 10) {
+      document.getElementById("phoneError").style.display = "block";
+      document.getElementById("contactPhone").focus();
+      return;
+    }
+    if (!relation) return showToast("Please select a relationship type.");
+
+    const contacts = getContacts();
+
+    // Duplicate check
+    const dupIdx = contacts.findIndex((c, i) => {
+      if (editingCard && i === editingCard.idx) return false;
+      return c.phone === phone || c.name.toLowerCase() === name.toLowerCase();
+    });
+    if (dupIdx !== -1) return showToast("A contact with the same name or phone already exists.");
+
+    if (editingCard) {
+      contacts[editingCard.idx] = { ...contacts[editingCard.idx], name, phone, relationship: relation };
+      persistContacts(contacts);
+      showToast(`${name} updated successfully.`);
+    } else {
+      const isPrimary = contacts.length === 0;
+      contacts.push({ name, phone, relationship: relation, primary: isPrimary });
+      persistContacts(contacts);
+      showToast(`${name} added as a trusted contact.`);
+    }
+
+    document.getElementById("addModal").classList.remove("open");
+    renderContacts();
+  });
+
+  // ── Set Primary ──
+  function setPrimary(idx) {
+    const contacts = getContacts();
+    contacts.forEach((c, i) => c.primary = (i === idx));
+    persistContacts(contacts);
+    showToast(`${contacts[idx].name} is now your primary contact.`);
+    renderContacts();
+  }
+
+  // ── Delete ──
+  function openDelete(name, card) {
+    cardToDelete = card;
+    document.getElementById("deleteMessage").textContent = `Remove "${name}" from your trusted contacts?`;
+    document.getElementById("deleteModal").classList.add("open");
+  }
+
+  document.getElementById("cancelDelete").addEventListener("click", () => {
+    document.getElementById("deleteModal").classList.remove("open");
+    cardToDelete = null;
+  });
+
+  document.getElementById("deleteModal").addEventListener("click", e => {
+    if (e.target === document.getElementById("deleteModal")) {
+      document.getElementById("deleteModal").classList.remove("open");
+      cardToDelete = null;
+    }
+  });
+
+  document.getElementById("confirmDelete").addEventListener("click", () => {
+    if (!cardToDelete) return;
+    const idx = parseInt(cardToDelete.dataset.idx);
+    const contacts = getContacts();
+    const name = contacts[idx]?.name;
+    contacts.splice(idx, 1);
+    // If removed primary, reassign
+    if (contacts.length > 0 && !contacts.some(c => c.primary)) {
+      contacts[0].primary = true;
+    }
+    persistContacts(contacts);
+    document.getElementById("deleteModal").classList.remove("open");
+    cardToDelete = null;
+    showToast(name ? `${name} was removed.` : "Contact removed.");
+    renderContacts();
+  });
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      document.getElementById("addModal").classList.remove("open");
+      document.getElementById("deleteModal").classList.remove("open");
+    }
+  });
+
+  // ── Init ──
+  renderContacts();
+</script>
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a href="index.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="start-journey.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      Journey
+    </a>
+    <a href="safety-map.html" class="mob-nav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Map
+    </a>
+    <a href="sos.html" class="mob-nav-item mob-nav-sos">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      SOS
+    </a>
+    <a href="settings.html" class="mob-nav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+</body>
+</html>
